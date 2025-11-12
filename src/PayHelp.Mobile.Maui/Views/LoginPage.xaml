@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.LoginPage"
+             Title="Login">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,40,24,24" Spacing="20">
+            
+            <!-- Hero Section -->
+            <Border Style="{StaticResource HeroCard}">
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <Label Text="PayHelp" 
+                           Style="{StaticResource H1}" 
+                           TextColor="White"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Bem-vindo de volta" 
+                           Style="{StaticResource Subtitle}" 
+                           TextColor="#E0E7FF"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Form Section -->
+            <VerticalStackLayout Spacing="16" Margin="0,20,0,0">
+                
+                <Label Text="Entre na sua conta" Style="{StaticResource H3}" />
+                
+                <!-- Email Input -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="E-mail" Style="{StaticResource Body}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Entry Placeholder="seu@email.com" 
+                               Keyboard="Email" 
+                               Text="{Binding Email}"
+                               BackgroundColor="Transparent"
+                               Margin="0"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Password Input com botão Mostrar/Ocultar -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Senha" Style="{StaticResource Body}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Entry Grid.Column="0"
+                                   Placeholder="Digite sua senha"
+                                   IsPassword="{Binding SenhaOculta}"
+                                   Text="{Binding Senha}"
+                                   BackgroundColor="Transparent"
+                                   Margin="0"/>
+
+                            <!-- Botão de alternância de visibilidade da senha -->
+                            <Button Grid.Column="1"
+                                    Command="{Binding AlternarSenhaOcultaCommand}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Padding="12,0"
+                                    HeightRequest="40">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding SenhaOculta}" Value="True">
+                                        <Setter Property="Text" Value="Mostrar" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Button" Binding="{Binding SenhaOculta}" Value="False">
+                                        <Setter Property="Text" Value="Ocultar" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Buttons -->
+                <Button Text="Entrar" 
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding LoginCommand}"
+                        Margin="0,16,0,0" />
+
+                <Button Text="Criar nova conta" 
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding NavigateCadastroCommand}" />
+
+                <!-- Mensagem de erro de login (inline) -->
+                <Frame Style="{StaticResource WarningCard}" IsVisible="{Binding HasLoginError}">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Não foi possível entrar" Style="{StaticResource Body}" FontAttributes="Bold"/>
+                        <Label Text="{Binding LoginError}" Style="{StaticResource Caption}"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Loading Indicator -->
+                <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                   IsVisible="{Binding IsBusy}"
+                                   Margin="0,8,0,0" />
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

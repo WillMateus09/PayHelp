@@ -1,0 +1,22 @@
+@model PayHelp.WebApp.Mvc.ViewModels.TicketDetailsViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Chamado criado</h2>
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">@Model.Titulo</h5>
+        <p class="card-text">@Model.Descricao</p>
+        <div class="text-muted small">Criado em: @Model.CriadoEm</div>
+        <div class="mt-2"><span class="badge text-bg-secondary">Status: @Model.Status</span></div>
+    </div>
+    <div class="card-footer d-flex gap-2">
+        <a class="btn btn-primary" href="@Url.Action("Chat","Tickets", new { id = Model.Id })">Ir para o chat</a>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Minhas","Tickets")">Voltar para Meus Chamados</a>
+    </div>
+    <div class="card-footer text-muted">
+        Dica: No chat, você pode usar a Triagem IA para tentar resolver seu problema rapidamente.
+    </div>
+    
+</div>

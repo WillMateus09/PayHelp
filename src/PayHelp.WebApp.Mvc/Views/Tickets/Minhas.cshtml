@@ -1,0 +1,177 @@
+@model IEnumerable<object>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string? TryGetStr(object obj, params string[] names)
+    {
+        var t = obj.GetType();
+        foreach (var n in names)
+        {
+            var p = t.GetProperty(n);
+            if (p == null) continue;
+            var v = p.GetValue(obj);
+            if (v == null) continue;
+            return v.ToString();
+        }
+        return null;
+    }
+
+    string FormatDate(object? v)
+    {
+        if (v == null) return "—";
+        return v switch
+        {
+            DateTime dt => dt.ToString("g"),
+            DateTimeOffset dto => dto.LocalDateTime.ToString("g"),
+            _ => v.ToString() ?? "—"
+        };
+    }
+
+    string? TryGetDateStr(object obj, params string[] names)
+    {
+        var t = obj.GetType();
+        foreach (var n in names)
+        {
+            var p = t.GetProperty(n);
+            if (p == null) continue;
+            var v = p.GetValue(obj);
+            if (v == null) continue;
+            return FormatDate(v);
+        }
+        return "—";
+    }
+}
+
+<!-- Header da Página -->
+<div class="page-header-modern mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h1 class="page-title-modern">
+                <i class="fas fa-folder-open text-gradient me-2"></i>
+                Meus Chamados
+            </h1>
+            <p class="page-subtitle-modern">Acompanhe o status de todos os seus chamados</p>
+        </div>
+        <div class="page-stats">
+            <div class="stat-badge-modern me-2">
+                <i class="fas fa-ticket-alt me-2"></i>
+                <span>@(Model?.Count() ?? 0) chamados</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botão e Dica -->
+<div class="card card-modern mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <a class="btn btn-gradient-success btn-lg" href="@Url.Action("Abrir", "Tickets")">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Abrir Novo Chamado
+                </a>
+            </div>
+            <div class="alert alert-info alert-modern mb-0" style="flex: 1; min-width: 300px;">
+                <i class="fas fa-robot me-2"></i>
+                <span><strong>Dica:</strong> Use a Triagem IA — respostas instantâneas! O atendente humano pode demorar devido à alta demanda.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Chamados -->
+@if (Model == null || !Model.Any())
+{
+    <div class="card card-modern">
+        <div class="card-body">
+            <div class="empty-state-modern">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <h5>Nenhum chamado encontrado</h5>
+                <p class="text-muted mb-4">Você ainda não abriu nenhum chamado. Que tal começar agora?</p>
+                <a href="@Url.Action("Abrir", "Tickets")" class="btn btn-gradient-primary">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Abrir Primeiro Chamado
+                </a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card card-modern">
+        <div class="card-body">
+            <h5 class="card-title-modern mb-3">
+                <i class="fas fa-list me-2"></i>
+                Lista de Chamados
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-modern table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag me-1"></i> ID</th>
+                            <th><i class="fas fa-heading me-1"></i> Título</th>
+                            <th><i class="fas fa-info-circle me-1"></i> Status</th>
+                            <th><i class="fas fa-calendar-plus me-1"></i> Criado Em</th>
+                            <th><i class="fas fa-calendar-check me-1"></i> Encerrado Em</th>
+                            <th class="text-center"><i class="fas fa-cog me-1"></i> Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var t in Model)
+                    {
+                        var id = TryGetStr(t, "Id", "TicketId");
+                        var titulo = TryGetStr(t, "Titulo", "Title", "Assunto") ?? "(sem título)";
+                        var status = TryGetStr(t, "Status", "Situacao") ?? "—";
+                        var criado = TryGetDateStr(t, "CriadoEm", "CriadoEmUtc", "CreatedAt", "DataCriacao");
+                        var encerrado = TryGetDateStr(t, "EncerradoEm", "EncerradoEmUtc", "ClosedAt", "DataEncerramento");
+
+                        <tr class="ticket-row-modern">
+                            <td>
+                                <span class="badge-ticket-modern">#@id</span>
+                            </td>
+                            <td>
+                                <strong>@titulo</strong>
+                            </td>
+                            <td>
+                                @if (string.Equals(status, "Encerrado", System.StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="badge badge-status-success">
+                                        <i class="fas fa-check-circle me-1"></i> Encerrado
+                                    </span>
+                                }
+                                else if (string.Equals(status, "EmAtendimento", System.StringComparison.OrdinalIgnoreCase) || 
+                                         string.Equals(status, "Em Atendimento", System.StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="badge badge-status-warning">
+                                        <i class="fas fa-clock me-1"></i> Em Atendimento
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-status-danger">
+                                        <i class="fas fa-exclamation-circle me-1"></i> Aberto
+                                    </span>
+                                }
+                            </td>
+                            <td>@criado</td>
+                            <td>@encerrado</td>
+                            <td class="text-center">
+                                @if (!string.IsNullOrWhiteSpace(id))
+                                {
+                                    <a class="btn btn-primary-modern btn-sm" href="@Url.Action("Chat", "Tickets", new { id = id })">
+                                        <i class="fas fa-comments me-1"></i> Abrir Chat
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Id inválido</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

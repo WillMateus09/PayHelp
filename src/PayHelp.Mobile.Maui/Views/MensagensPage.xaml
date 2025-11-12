@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.MensagensPage"
+             Title="Mensagens Automáticas"
+             Appearing="ContentPage_Appearing">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="20" RowSpacing="16">
+        
+        <!-- Header -->
+        <VerticalStackLayout Spacing="8">
+            <Label Text="Mensagens Automáticas" Style="{StaticResource H3}" />
+            <Label Text="Gerencie respostas rápidas para chamados" 
+                   Style="{StaticResource Subtitle}" />
+        </VerticalStackLayout>
+
+        <!-- Form de Adição -->
+        <Frame Grid.Row="1" Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Nova Mensagem" 
+                       Style="{StaticResource Body}"
+                       FontAttributes="Bold"/>
+                
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" 
+                      ColumnSpacing="8" RowSpacing="12">
+                    
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="Título" Style="{StaticResource Caption}"/>
+                        <Border Style="{StaticResource InputBorder}">
+                            <Entry Placeholder="Ex: Senha resetada" 
+                                   Text="{Binding NovoTitulo}"
+                                   BackgroundColor="Transparent"
+                                   Margin="0"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                        <Label Text="Gatilhos (vírgula)" Style="{StaticResource Caption}"/>
+                        <Border Style="{StaticResource InputBorder}">
+                            <Entry Placeholder="senha,reset,login" 
+                                   Text="{Binding NovosGatilhos}"
+                                   BackgroundColor="Transparent"
+                                   Margin="0"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="4">
+                        <Label Text="Conteúdo da Mensagem" Style="{StaticResource Caption}"/>
+                        <Border Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}"
+                                StrokeThickness="2"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource SurfaceDark}}"
+                                Padding="12"
+                                Margin="0,8,0,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+                            <Editor Placeholder="Digite a resposta automática..." 
+                                    Text="{Binding NovoConteudo}"
+                                    BackgroundColor="Transparent"
+                                    HeightRequest="80"
+                                    Margin="0"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <Button Grid.Row="2" Grid.ColumnSpan="2"
+                            Text="Adicionar Mensagem" 
+                            Style="{StaticResource SuccessButton}"
+                            Command="{Binding CriarCommand}"
+                            HeightRequest="44"/>
+                </Grid>
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- Lista de Mensagens -->
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Itens}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            
+                            <!-- Conteúdo -->
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding Titulo}" 
+                                       Style="{StaticResource Body}"
+                                       FontAttributes="Bold"/>
+                                
+                                <Label Text="{Binding Conteudo}" 
+                                       Style="{StaticResource Body}"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="2"/>
+                                
+                                <Border Style="{StaticResource Badge}">
+                                    <Label Text="{Binding GatilhoPalavraChave}" 
+                                           TextColor="White"
+                                           FontSize="12"
+                                           LineBreakMode="TailTruncation"/>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <!-- Botão Remover -->
+                            <Button Grid.Column="1"
+                                    Text="Remover" 
+                                    Style="{StaticResource DangerButton}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoverCommand}" 
+                                    CommandParameter="{Binding .}"
+                                    VerticalOptions="Center"
+                                    HeightRequest="40"
+                                    Padding="12,0"/>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            
+            <!-- Empty State -->
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" 
+                                   VerticalOptions="Center"
+                                   Spacing="16"
+                                   Padding="40">
+                    <Label Text="💬" 
+                           FontSize="64"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Nenhuma mensagem automática cadastrada" 
+                           Style="{StaticResource Body}"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Adicione uma mensagem usando o formulário acima" 
+                           Style="{StaticResource Caption}"
+                           HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+    </Grid>
+</ContentPage>

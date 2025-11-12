@@ -1,0 +1,28 @@
+# ====== .NET geral ======
+bin/
+obj/
+.vs/
+*.user
+*.db
+*.exe
+*.dll
+*.pdb
+*.log
+*.tmp
+
+# ====== Configurações locais ======
+appsettings.Development.json
+appsettings.Local.json
+.env
+
+# ====== Build Android (MAUI) ======
+*.apk
+*.aab
+src/**/Resources/**
+src/**/Platforms/**
+src/**/bin/
+src/**/obj/
+
+# ====== Outros ======
+*.cache
+*.DS_Store

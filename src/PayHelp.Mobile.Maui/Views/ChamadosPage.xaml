@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.ChamadosPage"
+             x:Name="ChamadosPageRoot"
+             Title="Chamados"
+             Appearing="ContentPage_Appearing">
+    <Grid RowDefinitions="Auto,*" Padding="20" RowSpacing="20">
+        
+        <!-- Header Actions -->
+        <VerticalStackLayout Spacing="12">
+            
+            <!-- Action Buttons -->
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Atualizar" 
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding CarregarCommand}"
+                        HorizontalOptions="Start"
+                        Padding="16,0"
+                        HeightRequest="44"/>
+                <Button Text="Abrir Chamado" 
+                        Style="{StaticResource SuccessButton}"
+                        Command="{Binding AbrirChamadoCommand}" 
+                        IsVisible="{Binding IsNaoSuporte}"
+                        HorizontalOptions="Start"
+                        Padding="16,0"
+                        HeightRequest="44"/>
+            </HorizontalStackLayout>
+
+            <!-- Filters Card -->
+            <Frame Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    
+                    <!-- Somente Abertos -->
+                    <HorizontalStackLayout Spacing="12">
+                        <CheckBox IsChecked="{Binding SomenteAbertos}"
+                                  VerticalOptions="Center"/>
+                        <Label Text="Mostrar somente chamados abertos" 
+                               Style="{StaticResource Body}"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+
+                    <!-- Filtro de Status (para suporte) -->
+                    <VerticalStackLayout Spacing="8" IsVisible="{Binding IsSuporte}">
+                        <Label Text="Filtrar por status" Style="{StaticResource Caption}"/>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Border Style="{StaticResource InputBorder}">
+                                <Entry Placeholder="Digite o status" 
+                                       Text="{Binding FiltroStatus}"
+                                       BackgroundColor="Transparent"
+                                       Margin="0"/>
+                            </Border>
+                            <Button Grid.Column="1"
+                                    Text="Filtrar" 
+                                    Style="{StaticResource SmallButton}"
+                                    Command="{Binding CarregarCommand}"
+                                    Padding="12,0"
+                                    HeightRequest="44"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+
+        <!-- Chamados List -->
+        <CollectionView Grid.Row="1" 
+                        ItemsSource="{Binding Itens}" 
+                        SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer 
+                                Command="{Binding Source={x:Reference ChamadosPageRoot}, Path=BindingContext.AbrirDetalheCommand}" 
+                                CommandParameter="{Binding}"/>
+                        </Frame.GestureRecognizers>
+                        
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            
+                            <!-- Conteúdo do Chamado -->
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding Titulo}" 
+                                       Style="{StaticResource Body}"
+                                       FontAttributes="Bold"
+                                       LineBreakMode="TailTruncation"/>
+                                
+                                <!-- Status e Badge IA -->
+                                <HorizontalStackLayout Spacing="8">
+                                    <Border Style="{StaticResource Badge}">
+                                        <Label Text="{Binding Status}" 
+                                               TextColor="White"
+                                               FontSize="12"
+                                               FontAttributes="Bold"/>
+                                    </Border>
+                                    
+                                    <Border Style="{StaticResource WarningBadge}"
+                                            IsVisible="{Binding Triaging}">
+                                        <Label Text="IA" 
+                                               TextColor="White"
+                                               FontSize="12"
+                                               FontAttributes="Bold"/>
+                                    </Border>
+                                </HorizontalStackLayout>
+                                
+                                <Label Text="{Binding DataAbertura, StringFormat='Aberto em: {0:dd/MM/yyyy HH:mm}'}" 
+                                       Style="{StaticResource Caption}"/>
+                            </VerticalStackLayout>
+
+                            <!-- Botão de Ação -->
+                            <Border BackgroundColor="{StaticResource Primary}"
+                                    StrokeThickness="0"
+                                    WidthRequest="40"
+                                    HeightRequest="40"
+                                    VerticalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10"/>
+                                </Border.StrokeShape>
+                                <Label Text="›" 
+                                       TextColor="White"
+                                       FontSize="24"
+                                       FontAttributes="Bold"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"/>
+                            </Border>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            
+            <!-- Empty State -->
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" 
+                                   VerticalOptions="Center"
+                                   Spacing="16"
+                                   Padding="40">
+                    <Label Text="📭" 
+                           FontSize="64"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Nenhum chamado encontrado" 
+                           Style="{StaticResource Body}"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Tente ajustar os filtros ou criar um novo chamado" 
+                           Style="{StaticResource Caption}"
+                           HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+    </Grid>
+</ContentPage>

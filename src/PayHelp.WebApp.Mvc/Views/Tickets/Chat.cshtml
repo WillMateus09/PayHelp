@@ -1,0 +1,246 @@
+@model PayHelp.WebApp.Mvc.ViewModels.ChatViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+
+    var triageKey = $"triage:{Model.TicketId}";
+    var triagemOk = Context?.Session?.TryGetValue(triageKey, out var _) == true;
+
+    var isSimples = User?.IsInRole("Simples") == true;
+    var isSuporte = User?.IsInRole("Suporte") == true;
+    var isEncerrado = Model.Status == PayHelp.Domain.Enums.TicketStatus.Encerrado;
+}
+
+<!-- Header do Chat -->
+<div class="chat-header-modern mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="chat-title-section">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <a href="@Url.Action("Minhas", "Tickets")" class="btn btn-back-modern">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <span class="chat-ticket-number">#@Model.TicketId</span>
+                    <h2 class="chat-title mb-0">@Model.Titulo</h2>
+                </div>
+            </div>
+            <div class="chat-status-info">
+                @if (isEncerrado)
+                {
+                    <span class="badge badge-chat-closed">
+                        <i class="fas fa-check-circle me-1"></i> Chamado Encerrado
+                    </span>
+                }
+                else if (Model.Status == PayHelp.Domain.Enums.TicketStatus.EmAtendimento)
+                {
+                    <span class="badge badge-chat-progress">
+                        <i class="fas fa-user-headset me-1"></i> Em Atendimento
+                    </span>
+                }
+                else
+                {
+                    <span class="badge badge-chat-open">
+                        <i class="fas fa-clock me-1"></i> Aguardando Atendimento
+                    </span>
+                }
+            </div>
+        </div>
+
+        @if (!isEncerrado)
+        {
+            <div class="chat-actions d-flex gap-2 flex-wrap">
+                @if (isSimples)
+                {
+                    <form method="post" action="@Url.Action("TriagemIA", "Tickets")" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ticketId" value="@Model!.TicketId" />
+                        <button class="btn btn-chat-ai" type="submit">
+                            <i class="fas fa-robot me-2"></i>
+                            Triagem IA
+                        </button>
+                    </form>
+                    @if (Model.Status == PayHelp.Domain.Enums.TicketStatus.Aberto)
+                    {
+                        <form method="post" action="@Url.Action("ChamarAtendente", "Tickets")" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ticketId" value="@Model!.TicketId" />
+                            <button class="btn btn-chat-call" type="submit" @(triagemOk ? "" : "disabled")
+                                    data-bs-toggle="tooltip"
+                                    data-bs-title="Execute a Triagem IA antes de chamar um atendente.">
+                                <i class="fas fa-phone-alt me-2"></i>
+                                Chamar Atendente
+                            </button>
+                        </form>
+                    }
+                    else if (Model.Status != PayHelp.Domain.Enums.TicketStatus.EmAtendimento)
+                    {
+                        <span class="alert-chat-info">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Não é possível chamar atendente quando o status é @Model.Status.
+                        </span>
+                    }
+                }
+                @if (isSuporte)
+                {
+                    <form method="post" action="@Url.Action("Encerrar", "Support")" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ticketId" value="@Model!.TicketId" />
+                        <button class="btn btn-chat-close" type="submit">
+                            <i class="fas fa-times-circle me-2"></i>
+                            Encerrar Chamado
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Área de Mensagens -->
+
+<!-- Área de Mensagens -->
+<div class="chat-container-modern">
+    <div id="messages" class="chat-messages-modern">
+        @if (Model?.Mensagens != null && Model.Mensagens.Any())
+        {
+            foreach (var m in Model.Mensagens)
+            {
+                var isBot = m.RemetenteNome?.StartsWith("BOT") == true;
+                var isCurrentUser = m.RemetenteNome == User?.Identity?.Name;
+                var messageClass = isBot ? "message-bot" : (isCurrentUser ? "message-sent" : "message-received");
+                
+                <div class="chat-message @messageClass">
+                    <div class="message-avatar">
+                        @if (isBot)
+                        {
+                            <i class="fas fa-robot"></i>
+                        }
+                        else if (isCurrentUser)
+                        {
+                            <i class="fas fa-user"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-user-headset"></i>
+                        }
+                    </div>
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-sender">@m.RemetenteNome</span>
+                            <span class="message-time">@m.EnviadoEm.ToString("HH:mm")</span>
+                        </div>
+                        <div class="message-text">@m.Conteudo</div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="chat-empty-state">
+                <i class="fas fa-comments fa-3x mb-3"></i>
+                <p>Nenhuma mensagem ainda. Seja o primeiro a enviar!</p>
+            </div>
+        }
+    </div>
+
+    <!-- Formulário de Envio -->
+    @if (isEncerrado)
+    {
+        <div class="chat-closed-notice">
+            <i class="fas fa-lock me-2"></i>
+            <strong>Chamado Encerrado</strong>
+            <p class="mb-0">Este chamado foi encerrado e não é mais possível enviar mensagens.</p>
+        </div>
+    }
+    else
+    {
+        @if (TempData["Erro"] is string erroMsg)
+        {
+            <div class="alert alert-danger alert-modern mb-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                @erroMsg
+            </div>
+        }
+        @if (TempData["TriagemObrigatoria"] is string triMsg)
+        {
+            <div class="alert alert-warning alert-modern mb-3">
+                <i class="fas fa-robot me-2"></i>
+                @triMsg
+            </div>
+        }
+        
+        <form method="post" action="@Url.Action("EnviarMensagem", new { ticketId = Model!.TicketId })" class="chat-input-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ticketId" value="@Model!.TicketId" />
+            <div class="chat-input-wrapper">
+                <input class="chat-input" 
+                       name="mensagem" 
+                       autocomplete="off" 
+                       placeholder="Digite sua mensagem..." 
+                       required />
+                <button class="btn-send-message" type="submit">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </form>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+            new bootstrap.Tooltip(el);
+        });
+
+        const ticketId = "@Model!.TicketId";
+        const messagesDiv = document.getElementById("messages");
+        const currentUser = "@User?.Identity?.Name";
+
+        // Scroll para o final
+        function scrollToBottom() {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        scrollToBottom();
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/chat")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceiveMessage", payload => {
+            if (!payload || payload.ticketId !== ticketId) return;
+            
+            const isBot = payload.user?.startsWith("BOT");
+            const isCurrentUser = payload.user === currentUser;
+            const messageClass = isBot ? "message-bot" : (isCurrentUser ? "message-sent" : "message-received");
+            
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `chat-message ${messageClass}`;
+            
+            const avatarIcon = isBot ? "fa-robot" : (isCurrentUser ? "fa-user" : "fa-user-headset");
+            const messageTime = new Date(payload.sentAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas ${avatarIcon}"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-sender">${payload.user}</span>
+                        <span class="message-time">${messageTime}</span>
+                    </div>
+                    <div class="message-text">${payload.message}</div>
+                </div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            scrollToBottom();
+        });
+
+        connection.start()
+            .then(() => connection.invoke("JoinTicket", ticketId))
+            .catch(err => console.error(err));
+    </script>
+}

@@ -1,0 +1,54 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="error-container">
+    <div class="error-content">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h1 class="error-title">Oops! Algo deu errado</h1>
+        <p class="error-message">Ocorreu um erro ao processar sua solicitação.</p>
+        
+        @if (Model.ShowRequestId)
+        {
+            <div class="error-details">
+                <p class="mb-0">
+                    <strong><i class="fas fa-fingerprint me-2"></i>Request ID:</strong> 
+                    <code class="request-id">@Model.RequestId</code>
+                </p>
+            </div>
+        }
+        
+        <div class="error-actions">
+            <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-primary btn-modern btn-lg">
+                <i class="fas fa-home me-2"></i> Voltar para Home
+            </a>
+        </div>
+        
+        <div class="error-info-box mt-5">
+            <div class="info-header">
+                <i class="fas fa-code me-2"></i>
+                <strong>Modo de Desenvolvimento</strong>
+            </div>
+            <div class="info-content">
+                <p>
+                    Alternar para o ambiente de <strong>Development</strong> exibirá informações 
+                    mais detalhadas sobre o erro que ocorreu.
+                </p>
+                <p class="text-warning">
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    <strong>O ambiente de Development não deve ser habilitado para aplicações implantadas.</strong>
+                    Isso pode resultar na exibição de informações confidenciais de exceções para os usuários finais.
+                </p>
+                <p class="mb-0">
+                    Para depuração local, habilite o ambiente de <strong>Development</strong> definindo 
+                    a variável de ambiente <code>ASPNETCORE_ENVIRONMENT</code> como <code>Development</code> 
+                    e reiniciando o aplicativo.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

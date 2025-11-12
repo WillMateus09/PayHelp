@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>PayHelp.WebApp.Mvc</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Referências de projeto -->
+  <ItemGroup>
+    <ProjectReference Include="..\PayHelp.Infrastructure.InMemory\PayHelp.Infrastructure.InMemory.csproj" />
+    <ProjectReference Include="..\PayHelp.Application\PayHelp.Application.csproj" />
+    <ProjectReference Include="..\PayHelp.Domain\PayHelp.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
+  </ItemGroup>
+</Project>

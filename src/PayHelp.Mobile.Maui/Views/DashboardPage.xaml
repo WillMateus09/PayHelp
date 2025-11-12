@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.DashboardPage"
+             Title="Dashboard"
+             Appearing="ContentPage_Appearing">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <!-- Header -->
+            <Label Text="Dashboard" Style="{StaticResource H2}" />
+
+            <!-- Filtros Section -->
+            <Frame Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Filtros" 
+                           Style="{StaticResource Body}"
+                           FontAttributes="Bold"/>
+                    
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" 
+                          ColumnSpacing="12" RowSpacing="12">
+                        
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="Data Início" Style="{StaticResource Caption}"/>
+                            <DatePicker Date="{Binding DataInicio}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Data Fim" Style="{StaticResource Caption}"/>
+                            <DatePicker Date="{Binding DataFim}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="4">
+                            <Label Text="Status" Style="{StaticResource Caption}"/>
+                            <Border Style="{StaticResource InputBorder}">
+                                <Entry Placeholder="Todos os status" 
+                                       Text="{Binding Status}"
+                                       BackgroundColor="Transparent"
+                                       Margin="0"/>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <Button Grid.Row="2" Grid.ColumnSpan="2"
+                                Text="Aplicar Filtros" 
+                                Style="{StaticResource SmallButton}"
+                                Command="{Binding CarregarCommand}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Resumo Section -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Resumo Geral" 
+                       Style="{StaticResource H4}" />
+
+                <!-- Stats Cards Grid -->
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" 
+                      ColumnSpacing="12" RowSpacing="12">
+                    
+                    <!-- Total Card -->
+                    <Border Style="{StaticResource CardBorder}">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Primary}"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <Label Text="Total" 
+                                   Style="{StaticResource Caption}"
+                                   TextColor="{StaticResource Primary}"/>
+                            <Label Text="{Binding Resumo.Total}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="{StaticResource Primary}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Abertos Card -->
+                    <Border Style="{StaticResource CardBorder}" Grid.Column="1">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Warning}"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <Label Text="Abertos" 
+                                   Style="{StaticResource Caption}"
+                                   TextColor="{StaticResource Warning}"/>
+                            <Label Text="{Binding Resumo.Abertos}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="{StaticResource Warning}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Encerrados Card -->
+                    <Border Style="{StaticResource CardBorder}" Grid.Row="1">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Success}"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <Label Text="Encerrados" 
+                                   Style="{StaticResource Caption}"
+                                   TextColor="{StaticResource Success}"/>
+                            <Label Text="{Binding Resumo.Encerrados}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="{StaticResource Success}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Tempo Médio Card -->
+                    <Border Style="{StaticResource CardBorder}" Grid.Row="1" Grid.Column="1">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Info}"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <Label Text="Tempo Médio (h)" 
+                                   Style="{StaticResource Caption}"
+                                   TextColor="{StaticResource Info}"/>
+                            <Label Text="{Binding Resumo.TempoMedioResolucaoHoras, StringFormat='{0:F1}'}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="{StaticResource Info}"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,143 @@
+@model PayHelp.WebApp.Mvc.ViewModels.LoginViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="auth-container">
+    <div class="row align-items-center justify-content-center min-vh-100 py-5">
+        <div class="col-lg-10">
+            <div class="auth-card">
+                <div class="row g-0">
+                    <!-- Lado Esquerdo - Informações -->
+                    <div class="col-lg-6 auth-left">
+                        <div class="auth-branding">
+                            <div class="brand-icon-large">
+                                <i class="fas fa-headset"></i>
+                            </div>
+                            <h2 class="brand-title">PayHelp</h2>
+                            <p class="brand-subtitle">Sistema Inteligente de Suporte</p>
+                        </div>
+                        
+                        <div class="auth-features">
+                            <div class="feature-item">
+                                <i class="fas fa-robot"></i>
+                                <div>
+                                    <h5>Triagem com IA</h5>
+                                    <p>Respostas automáticas instantâneas</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-clock"></i>
+                                <div>
+                                    <h5>Suporte 24/7</h5>
+                                    <p>Atendimento quando você precisar</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-chart-line"></i>
+                                <div>
+                                    <h5>Acompanhamento</h5>
+                                    <p>Histórico completo de chamados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lado Direito - Formulário -->
+                    <div class="col-lg-6 auth-right">
+                        <div class="auth-form-wrapper">
+                            <div class="auth-header">
+                                <h3 class="auth-title">
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    Bem-vindo de volta!
+                                </h3>
+                                <p class="auth-description">Entre com suas credenciais para acessar o sistema</p>
+                            </div>
+
+                            @if (Context?.Request?.Query.ContainsKey("expired") == true)
+                            {
+                                <div class="alert alert-warning alert-modern mb-4">
+                                    <i class="fas fa-clock me-2"></i>
+                                    <div>
+                                        <strong>Sessão Expirada</strong>
+                                        <p class="mb-0">Sua sessão expirou por inatividade. Por favor, faça login novamente.</p>
+                                    </div>
+                                </div>
+                            }
+
+                            <form method="post" class="auth-form">
+                                <div class="mb-4">
+                                    <label class="form-label-auth">
+                                        <i class="fas fa-envelope me-2"></i>
+                                        E-mail
+                                    </label>
+                                    <input class="form-control form-control-auth" 
+                                           type="email"
+                                           asp-for="Email" 
+                                           placeholder="seu@email.com"
+                                           autocomplete="email" />
+                                    <span class="text-danger validation-message" asp-validation-for="Email"></span>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label-auth">
+                                        <i class="fas fa-lock me-2"></i>
+                                        Senha
+                                    </label>
+                                    <div class="password-input-wrapper">
+                                        <input class="form-control form-control-auth" 
+                                               type="password" 
+                                               id="password"
+                                               asp-for="Senha" 
+                                               placeholder="••••••••"
+                                               autocomplete="current-password" />
+                                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                                            <i class="fas fa-eye" id="toggleIcon"></i>
+                                        </button>
+                                    </div>
+                                    <span class="text-danger validation-message" asp-validation-for="Senha"></span>
+                                </div>
+
+                                <div class="text-danger mb-3">@Html.ValidationSummary()</div>
+
+                                <button class="btn btn-auth-primary w-100 mb-3" type="submit">
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    Entrar no Sistema
+                                </button>
+
+                                <div class="auth-divider">
+                                    <span>ou</span>
+                                </div>
+
+                                <a href="@Url.Action("Register", "Account")" class="btn btn-auth-secondary w-100">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    Criar Nova Conta
+                                </a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+    </script>
+}

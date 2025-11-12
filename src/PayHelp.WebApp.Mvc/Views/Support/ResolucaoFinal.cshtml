@@ -1,0 +1,159 @@
+@{
+    ViewData["Title"] = "Resolução Final do Atendimento";
+    var ticketTitulo = ViewBag.TicketTitulo as string ?? "Chamado";
+    var resolucao = ViewBag.Resolucao as string;
+    var registradoEm = ViewBag.ResolucaoRegistradaEm as DateTime?;
+    bool jaExiste = !string.IsNullOrWhiteSpace(resolucao);
+}
+
+<!-- Header da Página -->
+<div class="page-header-modern mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h1 class="page-title-modern">
+                <i class="fas fa-file-medical text-gradient me-2"></i>
+                Resolução Final do Atendimento
+            </h1>
+            <p class="page-subtitle-modern">Documente a solução completa do chamado para alimentar a base de conhecimento</p>
+        </div>
+    </div>
+</div>
+
+<!-- Card de Informações do Ticket -->
+<div class="card card-modern mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center gap-3">
+            <div class="resolution-icon">
+                <i class="fas fa-ticket-alt"></i>
+            </div>
+            <div>
+                <h5 class="mb-1"><strong>Ticket:</strong> @ticketTitulo</h5>
+                @if (jaExiste && registradoEm != null)
+                {
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-clock me-1"></i>
+                        Resolução registrada em @registradoEm.Value.ToString("dd/MM/yyyy 'às' HH:mm")
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas -->
+@if (TempData["Erro"] != null)
+{
+    <div class="alert alert-danger alert-modern mb-4">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        @TempData["Erro"]
+    </div>
+}
+@if (TempData["Sucesso"] != null)
+{
+    <div class="alert alert-success alert-modern mb-4">
+        <i class="fas fa-check-circle me-2"></i>
+        @TempData["Sucesso"]
+    </div>
+}
+
+@if (jaExiste)
+{
+    <div class="alert alert-info alert-modern mb-4">
+        <i class="fas fa-info-circle me-2"></i>
+        <div>
+            <strong>Resolução já registrada</strong>
+            <p class="mb-0">Esta resolução já foi salva e está bloqueada para edição. O conteúdo está disponível na base de conhecimento da IA.</p>
+        </div>
+    </div>
+}
+
+<!-- Formulário/Visualização -->
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card card-modern">
+            <div class="card-body p-4">
+                @if (!jaExiste)
+                {
+                    <h5 class="card-title-modern mb-4">
+                        <i class="fas fa-pen me-2"></i>
+                        Descreva a Solução Aplicada
+                    </h5>
+                    
+                    <form asp-action="RegistrarResolucao" method="post">
+                        <input type="hidden" name="ticketId" value="@Context.Request.Query["ticketId"]" />
+                        
+                        <div class="mb-4">
+                            <label for="solucao" class="form-label-modern">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                Descrição Completa da Solução
+                            </label>
+                            <textarea class="form-control form-control-modern resolution-textarea" 
+                                      id="solucao" 
+                                      name="solucao" 
+                                      rows="12" 
+                                      required 
+                                      placeholder="Descreva a solução de forma detalhada...&#13;&#10;&#13;&#10;Inclua:&#13;&#10;• Causa raiz do problema&#13;&#10;• Passos executados para resolução&#13;&#10;• Configurações alteradas&#13;&#10;• Recomendações para prevenir reincidência">@(resolucao ?? "")</textarea>
+                            <div class="form-help-text">
+                                <i class="fas fa-robot me-1"></i>
+                                <strong>Importante:</strong> Explique a causa raiz e os passos de correção detalhadamente. 
+                                Essas informações alimentarão a FAQ e a IA do sistema para resolver problemas similares automaticamente.
+                            </div>
+                        </div>
+
+                        <div class="resolution-tips mb-4">
+                            <h6 class="tips-title">
+                                <i class="fas fa-question-circle me-2"></i>
+                                Dicas para uma boa resolução:
+                            </h6>
+                            <ul class="tips-list">
+                                <li><i class="fas fa-check-circle me-2"></i>Seja específico e detalhado</li>
+                                <li><i class="fas fa-check-circle me-2"></i>Use linguagem clara e objetiva</li>
+                                <li><i class="fas fa-check-circle me-2"></i>Inclua comandos, configurações ou prints quando aplicável</li>
+                                <li><i class="fas fa-check-circle me-2"></i>Documente o problema E a solução</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex gap-3 justify-content-between">
+                            <a href="@Url.Action("Dashboard", "Support")" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Voltar ao Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-gradient-success btn-lg">
+                                <i class="fas fa-save me-2"></i>
+                                Salvar Resolução
+                            </button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <h5 class="card-title-modern mb-4">
+                        <i class="fas fa-lock me-2"></i>
+                        Resolução Registrada (Somente Leitura)
+                    </h5>
+                    
+                    <div class="mb-4">
+                        <label for="solucao" class="form-label-modern">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Descrição da Solução
+                        </label>
+                        <div class="resolution-view-box">
+                            @resolucao
+                        </div>
+                        <div class="form-help-text">
+                            <i class="fas fa-lock me-1"></i>
+                            Esta resolução está bloqueada para edição e já foi integrada à base de conhecimento do sistema.
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <a href="@Url.Action("Dashboard", "Support")" class="btn btn-gradient-primary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Voltar ao Dashboard
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

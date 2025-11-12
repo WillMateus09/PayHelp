@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.AbrirChamadoPage"
+             Title="Abrir Chamado">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,20,24,24" Spacing="20">
+            
+            <!-- Header -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Novo Chamado" Style="{StaticResource H2}" />
+                <Label Text="Descreva seu problema com o máximo de detalhes possível" 
+                       Style="{StaticResource Subtitle}" />
+            </VerticalStackLayout>
+
+            <!-- Form Section -->
+            <VerticalStackLayout Spacing="16" Margin="0,20,0,0">
+                
+                <!-- Título -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Título do Chamado" Style="{StaticResource Body}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Entry Placeholder="Ex: Erro ao fazer login" 
+                               Text="{Binding Titulo}"
+                               BackgroundColor="Transparent"
+                               Margin="0"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Descrição -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Descrição Detalhada" Style="{StaticResource Body}" />
+                    <Border Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}"
+                            StrokeThickness="2"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource SurfaceDark}}"
+                            Padding="16"
+                            Margin="0,8,0,0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12" />
+                        </Border.StrokeShape>
+                        <Editor Placeholder="Descreva o problema em detalhes..." 
+                                AutoSize="TextChanges" 
+                                Text="{Binding Descricao}"
+                                BackgroundColor="Transparent"
+                                MinimumHeightRequest="150"
+                                Margin="0"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Dicas -->
+                <Frame Style="{StaticResource InfoCard}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="💡 Dicas para um bom chamado:" 
+                               Style="{StaticResource Body}"
+                               FontAttributes="Bold"/>
+                        <VerticalStackLayout Spacing="6">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="•" Style="{StaticResource Body}"/>
+                                <Label Text="Seja específico sobre o problema" 
+                                       Style="{StaticResource Body}"/>
+                            </HorizontalStackLayout>
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="•" Style="{StaticResource Body}"/>
+                                <Label Text="Informe quando o problema começou" 
+                                       Style="{StaticResource Body}"/>
+                            </HorizontalStackLayout>
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="•" Style="{StaticResource Body}"/>
+                                <Label Text="Descreva os passos que levaram ao erro" 
+                                       Style="{StaticResource Body}"/>
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Botão de Envio -->
+                <Button Text="Abrir Chamado" 
+                        Style="{StaticResource SuccessButton}"
+                        Command="{Binding EnviarCommand}"
+                        Margin="0,16,0,0" />
+
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

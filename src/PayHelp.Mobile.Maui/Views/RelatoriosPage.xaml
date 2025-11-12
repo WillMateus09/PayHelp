@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.RelatoriosPage"
+             Title="Relatórios"
+             Appearing="ContentPage_Appearing">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <!-- Header -->
+            <Label Text="Relatórios e Indicadores" Style="{StaticResource H2}" />
+
+            <!-- Filtros Section -->
+            <Frame Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Filtros de Período" 
+                           Style="{StaticResource Body}"
+                           FontAttributes="Bold"/>
+                    
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" 
+                          ColumnSpacing="12" RowSpacing="12">
+                        
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="Data Início" Style="{StaticResource Caption}"/>
+                            <DatePicker Date="{Binding DataInicio}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Data Fim" Style="{StaticResource Caption}"/>
+                            <DatePicker Date="{Binding DataFim}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="4">
+                            <Label Text="Status" Style="{StaticResource Caption}"/>
+                            <Border Style="{StaticResource InputBorder}">
+                                <Entry Placeholder="Todos os status" 
+                                       Text="{Binding Status}"
+                                       BackgroundColor="Transparent"
+                                       Margin="0"/>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <Button Grid.Row="2" Grid.ColumnSpan="2"
+                                Text="Gerar Relatório" 
+                                Style="{StaticResource SmallButton}"
+                                Command="{Binding CarregarCommand}"
+                                HeightRequest="44"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Resumo Section -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Resumo do Período" 
+                       Style="{StaticResource H4}" />
+
+                <!-- Stats Cards Grid -->
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" 
+                      ColumnSpacing="12" RowSpacing="12">
+                    
+                    <!-- Total Card -->
+                    <Border Style="{StaticResource CardBorder}">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Primary}"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="📊" FontSize="24"/>
+                                <Label Text="Total" 
+                                       Style="{StaticResource Caption}"
+                                       TextColor="{StaticResource Primary}"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding Resumo.Total}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="{StaticResource Primary}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Abertos Card -->
+                    <Border Style="{StaticResource CardBorder}" Grid.Column="1">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Warning}"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="⏳" FontSize="24"/>
+                                <Label Text="Abertos" 
+                                       Style="{StaticResource Caption}"
+                                       TextColor="{StaticResource Warning}"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding Resumo.Abertos}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="{StaticResource Warning}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Encerrados Card -->
+                    <Border Style="{StaticResource CardBorder}" Grid.Row="1">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Success}"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="✅" FontSize="24"/>
+                                <Label Text="Encerrados" 
+                                       Style="{StaticResource Caption}"
+                                       TextColor="{StaticResource Success}"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding Resumo.Encerrados}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="{StaticResource Success}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Em Atendimento Card -->
+                    <Border Style="{StaticResource CardBorder}" Grid.Row="1" Grid.Column="1">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Warning}"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="🛠️" FontSize="24"/>
+                                <Label Text="Em Atendimento" 
+                                       Style="{StaticResource Caption}"
+                                       TextColor="{StaticResource Warning}"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding Resumo.EmAtendimento}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="{StaticResource Warning}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Tempo Médio Card -->
+                    <Border Style="{StaticResource CardBorder}" Grid.Row="2">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Info}"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="⏱️" FontSize="24"/>
+                                <Label Text="Tempo (h)" 
+                                       Style="{StaticResource Caption}"
+                                       TextColor="{StaticResource Info}"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding Resumo.TempoMedioResolucaoHoras, StringFormat='{0:F1}'}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="{StaticResource Info}"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Taxa de Resolução Card -->
+                    <Border Style="{StaticResource CardBorder}" Grid.Row="2" Grid.Column="1">
+                        <Border.Shadow>
+                            <Shadow Brush="{StaticResource Success}"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="📈" FontSize="24"/>
+                                <Label Text="Taxa de Resolução" 
+                                       Style="{StaticResource Caption}"
+                                       TextColor="{StaticResource Success}"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding Resumo.TaxaResolucaoPercent, StringFormat='{0:F1}%'}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="{StaticResource Success}"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </VerticalStackLayout>
+
+            <!-- Info Card -->
+            <Frame Style="{StaticResource InfoCard}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="💡 Sobre os Indicadores" 
+                           Style="{StaticResource Body}"
+                           FontAttributes="Bold"/>
+                    <Label Text="Os dados apresentados são calculados com base no período selecionado e no status filtrado. O tempo médio é calculado em horas para chamados encerrados." 
+                           Style="{StaticResource Body}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

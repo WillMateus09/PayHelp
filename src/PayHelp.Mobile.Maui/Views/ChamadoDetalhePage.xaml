@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.ChamadoDetalhePage"
+             x:Name="DetalheRoot"
+             Title="Detalhes do Chamado">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto" Padding="20" RowSpacing="12">
+        
+        <!-- Ações de Suporte -->
+        <HorizontalStackLayout Grid.Row="0" 
+                             HorizontalOptions="End" 
+                             Spacing="8" 
+                             IsVisible="{Binding IsSuporte}">
+            <Button Text="Assumir" 
+                    Style="{StaticResource SmallButton}"
+                    Command="{Binding AssumirCommand}" 
+                    IsEnabled="{Binding CanAssumir}"
+                    HeightRequest="40"
+                    Padding="16,0"/>
+            <Button Text="Encerrar" 
+                    Style="{StaticResource DangerButton}"
+                    Command="{Binding EncerrarCommand}" 
+                    IsEnabled="{Binding CanEncerrar}"
+                    HeightRequest="40"
+                    Padding="16,0"/>
+        </HorizontalStackLayout>
+
+        <!-- FAQ Sugerido -->
+        <Frame Grid.Row="1" 
+               IsVisible="{Binding MostrarFaq}" 
+               Style="{StaticResource SuccessCard}">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="💡 Solução Sugerida (FAQ)" 
+                       Style="{StaticResource Body}"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource Success}"/>
+                <Label Text="{Binding FaqResposta}" 
+                       Style="{StaticResource Body}"/>
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- Triagem IA -->
+        <Frame Grid.Row="2" 
+               IsVisible="{Binding MostrarTriagem}" 
+               Style="{StaticResource InfoCard}">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="🤖 Triagem com IA" 
+                       Style="{StaticResource Body}"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource Info}"/>
+                <Label Text="Aperte 'Triagem' para buscar soluções registradas; depois você poderá chamar um atendente." 
+                       Style="{StaticResource Body}"/>
+                <Button Text="Iniciar Triagem" 
+                        Style="{StaticResource SmallButton}"
+                        Command="{Binding ExecutarTriagemCommand}"
+                        HorizontalOptions="Start"
+                        Padding="16,0"
+                        HeightRequest="40"/>
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- Lista de Mensagens -->
+        <CollectionView Grid.Row="3" 
+                        ItemsSource="{Binding Ticket.Mensagens}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Style="{StaticResource Card}" Margin="0,0,0,8">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{Binding AutorNome}" 
+                                   Style="{StaticResource Body}"
+                                   FontAttributes="Bold"/>
+                            <Label Text="{Binding Texto}" 
+                                   Style="{StaticResource Body}"/>
+                            <Label Text="{Binding Data, StringFormat='{0:dd/MM/yyyy HH:mm}'}" 
+                                   Style="{StaticResource Caption}"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            
+            <!-- Empty State -->
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" 
+                                   VerticalOptions="Center"
+                                   Spacing="12"
+                                   Padding="40">
+                    <Label Text="💬" 
+                           FontSize="48"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Nenhuma mensagem ainda" 
+                           Style="{StaticResource Body}"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!-- Resolução Final -->
+        <Frame Grid.Row="4" 
+               IsVisible="{Binding Ticket.ResolucaoFinal}"
+               Style="{StaticResource SuccessCard}">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="✅ Resolução Final" 
+                       Style="{StaticResource Body}"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource Success}"/>
+                <Label Text="{Binding Ticket.ResolucaoFinal}" 
+                       Style="{StaticResource Body}"/>
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- Espaçador -->
+        <BoxView Grid.Row="5" 
+                 HeightRequest="1" 
+                 Color="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                 Margin="0,8"/>
+
+        <!-- Barra de Chat -->
+        <Grid Grid.Row="6" 
+              ColumnDefinitions="*,Auto,Auto" 
+              ColumnSpacing="8">
+            
+            <Border Style="{StaticResource InputBorder}">
+                <Entry Placeholder="Digite sua mensagem..." 
+                       Text="{Binding NovaMensagem}" 
+                       IsEnabled="{Binding CanChat}"
+                       BackgroundColor="Transparent"
+                       Margin="0"/>
+            </Border>
+
+            <Button Grid.Column="1" 
+                    Text="Enviar" 
+                    Style="{StaticResource SmallButton}"
+                    Command="{Binding EnviarMensagemCommand}" 
+                    IsEnabled="{Binding CanChat}"
+                    Padding="16,0"
+                    HeightRequest="44"/>
+
+            <!-- Botão Chamar Atendente (apenas para não-suporte) -->
+            <Button Grid.Column="2" 
+                    Text="Atendente" 
+                    Style="{StaticResource OutlineButton}"
+                    Command="{Binding ChamarAtendenteCommand}" 
+                    IsEnabled="{Binding CanChamarAtendente}"
+                    Padding="16,0"
+                    HeightRequest="44">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource OutlineButton}">
+                        <Setter Property="IsVisible" Value="True" />
+                        <Style.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding IsSuporte}" Value="True">
+                                <Setter Property="IsVisible" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+    </Grid>
+</ContentPage>

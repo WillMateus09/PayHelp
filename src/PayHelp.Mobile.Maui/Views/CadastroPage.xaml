@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.CadastroPage"
+             Title="Cadastro">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,20,24,24" Spacing="20">
+            
+            <!-- Header -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Criar Conta" Style="{StaticResource H2}" />
+                <Label Text="Preencha os dados abaixo para começar" 
+                       Style="{StaticResource Subtitle}" />
+            </VerticalStackLayout>
+
+            <!-- Form Section -->
+            <VerticalStackLayout Spacing="16" Margin="0,20,0,0">
+                
+                <!-- Número de Inscrição -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Número de Inscrição" Style="{StaticResource Body}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Entry Placeholder="000000" 
+                               Text="{Binding NumeroInscricao}"
+                               BackgroundColor="Transparent"
+                               Margin="0"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Nome -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Nome Completo" Style="{StaticResource Body}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Entry Placeholder="Seu nome completo" 
+                               Text="{Binding Nome}"
+                               BackgroundColor="Transparent"
+                               Margin="0"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Email -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="E-mail" Style="{StaticResource Body}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Entry Placeholder="seu@email.com" 
+                               Keyboard="Email" 
+                               Text="{Binding Email}"
+                               BackgroundColor="Transparent"
+                               Margin="0"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Senha -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Senha" Style="{StaticResource Body}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Entry Placeholder="Crie uma senha segura" 
+                               IsPassword="True" 
+                               Text="{Binding Senha}"
+                               BackgroundColor="Transparent"
+                               Margin="0"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Tipo de Usuário -->
+                <Frame Style="{StaticResource Card}">
+                    <HorizontalStackLayout Spacing="12">
+                        <Switch IsToggled="{Binding IsSuporte}"
+                                VerticalOptions="Center"/>
+                        <Label Text="Sou da equipe de suporte" 
+                               Style="{StaticResource Body}"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </Frame>
+
+                <!-- Palavra de Verificação (condicional) -->
+                <VerticalStackLayout Spacing="8" 
+                                   IsVisible="{Binding IsSuporte}">
+                    <Label Text="Palavra de Verificação" Style="{StaticResource Body}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Entry Placeholder="Código de acesso" 
+                               Text="{Binding PalavraVerificacao}"
+                               BackgroundColor="Transparent"
+                               Margin="0"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Buttons -->
+                <Button Text="Criar Conta" 
+                        Style="{StaticResource SuccessButton}"
+                        Command="{Binding CadastrarCommand}"
+                        Margin="0,16,0,0" />
+
+                <!-- Loading Indicator -->
+                <ActivityIndicator IsRunning="{Binding IsBusy}" 
+                                 IsVisible="{Binding IsBusy}"
+                                 Margin="0,16,0,0" />
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

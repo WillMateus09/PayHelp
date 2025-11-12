@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.HomePage"
+             x:Name="PageRef"
+             Title="Início">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="24">
+            
+         <!-- Hero Section -->
+         <Border Style="{StaticResource HeroCard}">
+          <VerticalStackLayout Spacing="12">
+              <Label Text="PayHelp" 
+                  Style="{StaticResource H1}" 
+                  TextColor="White"/>
+              <Label Text="Bem-vindo ao painel de suporte" 
+                  Style="{StaticResource Subtitle}" 
+                  TextColor="#E0E7FF"/>
+
+              <!-- Usuário logado e Logout -->
+                    <Grid ColumnDefinitions="*,Auto" Padding="0,4,0,0">
+                        <Label Grid.Column="0"
+                               Text="{Binding DisplayUser}"
+                               TextColor="#E0E7FF"
+                               Style="{StaticResource Caption}"/>
+                        <Button Grid.Column="1"
+                                Text="Sair"
+                                Style="{StaticResource HeroGhostButton}"
+                                Command="{Binding LogoutCommand}" />
+                    </Grid>
+          </VerticalStackLayout>
+         </Border>
+
+            <!-- Quick Actions Section -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Acesso Rápido" Style="{StaticResource H4}" />
+                
+                <!-- Action Cards Grid (3 colunas lado a lado) -->
+                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto" ColumnSpacing="12" RowSpacing="12">
+                    
+                    <!-- Dashboard Card -->
+                    <Frame Style="{StaticResource Card}" Grid.Row="0" Grid.Column="0">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnNavigateClicked" CommandParameter="dashboard" />
+                        </Frame.GestureRecognizers>
+                        <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                            <Border BackgroundColor="{StaticResource Primary}"
+                                    StrokeThickness="0"
+                                    WidthRequest="56"
+                                    HeightRequest="56"
+                                    HorizontalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Label Text="📊" 
+                                       FontSize="28"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"/>
+                            </Border>
+                            <Label Text="Dashboard" 
+                                   Style="{StaticResource Body}"
+                                   FontAttributes="Bold"
+                                   HorizontalTextAlignment="Center"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Mensagens Card -->
+                    <Frame Style="{StaticResource Card}" Grid.Row="0" Grid.Column="1">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnNavigateClicked" CommandParameter="mensagens" />
+                        </Frame.GestureRecognizers>
+                        <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                            <Border BackgroundColor="{StaticResource Secondary}"
+                                    StrokeThickness="0"
+                                    WidthRequest="56"
+                                    HeightRequest="56"
+                                    HorizontalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Label Text="💬" 
+                                       FontSize="28"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"/>
+                            </Border>
+                            <Label Text="Mensagens" 
+                                   Style="{StaticResource Body}"
+                                   FontAttributes="Bold"
+                                   HorizontalTextAlignment="Center"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Relatórios Card (com ícone, apenas título) -->
+                    <Frame Style="{StaticResource Card}" Grid.Row="0" Grid.Column="2">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnNavigateClicked" CommandParameter="relatorios" />
+                        </Frame.GestureRecognizers>
+                        <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                            <Border BackgroundColor="{StaticResource Warning}"
+                                    StrokeThickness="0"
+                                    WidthRequest="56"
+                                    HeightRequest="56"
+                                    HorizontalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Label Text="📈" 
+                                       FontSize="28"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"/>
+                            </Border>
+                            <Label Text="Relatórios" 
+                                   Style="{StaticResource Body}"
+                                   FontAttributes="Bold"
+                                   HorizontalTextAlignment="Center"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </Grid>
+            </VerticalStackLayout>
+
+            <!-- Info Section -->
+            <Frame Style="{StaticResource InfoCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Recursos Disponíveis" 
+                           Style="{StaticResource Body}"
+                           FontAttributes="Bold"/>
+                    
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="•" Style="{StaticResource Body}"/>
+                            <Label Text="Acesse seus chamados em andamento no Dashboard" 
+                                   Style="{StaticResource Body}"/>
+                        </HorizontalStackLayout>
+                        
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="•" Style="{StaticResource Body}"/>
+                            <Label Text="Gerencie mensagens automáticas para respostas rápidas" 
+                                   Style="{StaticResource Body}"/>
+                        </HorizontalStackLayout>
+                        
+                        <!-- Removido item de Relatórios -->
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

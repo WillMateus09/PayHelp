@@ -1,0 +1,129 @@
+@model IEnumerable<PayHelp.WebApp.Mvc.ViewModels.CannedMessageViewModel>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Header da Página -->
+<div class="page-header-modern mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h1 class="page-title-modern">
+                <i class="fas fa-comments text-gradient me-2"></i>
+                Mensagens Automáticas
+            </h1>
+            <p class="page-subtitle-modern">Configure respostas automáticas com gatilhos inteligentes</p>
+        </div>
+        <div class="page-stats">
+            <div class="stat-badge-modern">
+                <i class="fas fa-robot me-2"></i>
+                <span>@Model.Count() mensagens ativas</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formulário de Criação -->
+<div class="card card-modern mb-4">
+    <div class="card-body">
+        <h5 class="card-title-modern mb-3">
+            <i class="fas fa-plus-circle me-2"></i>
+            Nova Mensagem Automática
+        </h5>
+        <form method="post" asp-action="Criar" class="row g-3">
+            @Html.AntiForgeryToken()
+            <div class="col-md-3">
+                <label class="form-label-modern">
+                    <i class="fas fa-tag me-1"></i> Título
+                </label>
+                <input class="form-control form-control-modern" name="Titulo" placeholder="Ex: Boas-vindas" required />
+            </div>
+            <div class="col-md-5">
+                <label class="form-label-modern">
+                    <i class="fas fa-align-left me-1"></i> Conteúdo da Mensagem
+                </label>
+                <input class="form-control form-control-modern" name="Conteudo" placeholder="Digite a mensagem que será enviada automaticamente" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label-modern">
+                    <i class="fas fa-bolt me-1"></i> Gatilhos
+                </label>
+                <input class="form-control form-control-modern" name="GatilhoPalavraChave" placeholder="Ex: oi, olá, help" />
+                <small class="text-muted">Separe por vírgula</small>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-gradient-success w-100" type="submit">
+                    <i class="fas fa-check me-2"></i> Adicionar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Mensagens -->
+<div class="card card-modern">
+    <div class="card-body">
+        <h5 class="card-title-modern mb-3">
+            <i class="fas fa-list me-2"></i>
+            Mensagens Cadastradas
+        </h5>
+        
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-modern table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-tag me-1"></i> Título</th>
+                            <th><i class="fas fa-comment-dots me-1"></i> Conteúdo</th>
+                            <th><i class="fas fa-bolt me-1"></i> Gatilhos</th>
+                            <th class="text-center"><i class="fas fa-cog me-1"></i> Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var m in Model)
+                    {
+                        <tr class="message-row-modern">
+                            <td>
+                                <span class="badge-title-modern">@m.Titulo</span>
+                            </td>
+                            <td>
+                                <span class="message-content-modern">@m.Conteudo</span>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(m.GatilhoPalavraChave))
+                                {
+                                    foreach (var gatilho in m.GatilhoPalavraChave.Split(','))
+                                    {
+                                        <span class="badge-trigger-modern">@gatilho.Trim()</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <form method="post" asp-action="Remover" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@m.Id" />
+                                    <button class="btn btn-danger-modern btn-sm" type="submit" onclick="return confirm('Deseja realmente remover esta mensagem?')">
+                                        <i class="fas fa-trash-alt me-1"></i> Remover
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state-modern">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <h5>Nenhuma mensagem cadastrada</h5>
+                <p class="text-muted">Adicione sua primeira mensagem automática usando o formulário acima</p>
+            </div>
+        }
+    </div>
+</div>

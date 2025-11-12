@@ -1,0 +1,124 @@
+@model PayHelp.WebApp.Mvc.ViewModels.AbrirChamadoViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Header da Página -->
+<div class="page-header-modern mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h1 class="page-title-modern">
+                <i class="fas fa-ticket-alt text-gradient me-2"></i>
+                Abrir Chamado
+            </h1>
+            <p class="page-subtitle-modern">Descreva seu problema e nossa equipe entrará em contato</p>
+        </div>
+        <div class="page-stats">
+            <a href="@Url.Action("Minhas","Tickets")" class="stat-badge-modern" style="text-decoration: none;">
+                <i class="fas fa-list me-2"></i>
+                <span>Ver Meus Chamados</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Card de Dicas -->
+<div class="alert alert-info alert-modern mb-4">
+    <i class="fas fa-lightbulb fa-2x me-3"></i>
+    <div>
+        <strong>💡 Dica:</strong> Seja claro e detalhado na descrição do problema. Quanto mais informações você fornecer, mais rápido conseguiremos ajudá-lo!
+    </div>
+</div>
+
+<!-- Formulário de Abertura -->
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card card-modern">
+            <div class="card-body p-4">
+                <form method="post">
+                    <div class="mb-4">
+                        <label class="form-label-modern">
+                            <i class="fas fa-heading me-2"></i>
+                            Título do Chamado
+                        </label>
+                        <input class="form-control form-control-modern form-control-lg" 
+                               asp-for="Titulo" 
+                               placeholder="Ex: Problema ao acessar o sistema" />
+                        <span class="text-danger validation-message" asp-validation-for="Titulo"></span>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Resuma o problema em poucas palavras
+                        </small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label-modern">
+                            <i class="fas fa-align-left me-2"></i>
+                            Descrição Detalhada
+                        </label>
+                        <textarea class="form-control form-control-modern" 
+                                  rows="8" 
+                                  asp-for="Descricao"
+                                  placeholder="Descreva o problema com o máximo de detalhes possível...&#13;&#10;&#13;&#10;Exemplo:&#13;&#10;- O que aconteceu?&#13;&#10;- Quando começou?&#13;&#10;- Qual mensagem de erro aparece?&#13;&#10;- Já tentou alguma solução?"></textarea>
+                        <span class="text-danger validation-message" asp-validation-for="Descricao"></span>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Inclua prints, mensagens de erro e etapas para reproduzir o problema
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-3 justify-content-between align-items-center">
+                        <a href="@Url.Action("Index","Home")" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Voltar
+                        </a>
+                        <button class="btn btn-gradient-success btn-lg" type="submit">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Abrir Chamado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Card de Informações -->
+        <div class="card card-modern mt-4">
+            <div class="card-body">
+                <h5 class="card-title-modern mb-3">
+                    <i class="fas fa-question-circle me-2"></i>
+                    O que acontece depois?
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="info-step-modern">
+                            <div class="step-number">1</div>
+                            <div class="step-icon"><i class="fas fa-robot"></i></div>
+                            <div class="step-title">Triagem IA</div>
+                            <div class="step-description">Nossa IA analisa seu chamado instantaneamente</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-step-modern">
+                            <div class="step-number">2</div>
+                            <div class="step-icon"><i class="fas fa-user-headset"></i></div>
+                            <div class="step-title">Atendimento</div>
+                            <div class="step-description">Um especialista responderá em breve</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-step-modern">
+                            <div class="step-number">3</div>
+                            <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="step-title">Resolução</div>
+                            <div class="step-description">Seu problema será resolvido!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

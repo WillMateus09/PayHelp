@@ -1,0 +1,253 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAuth = User?.Identity?.IsAuthenticated == true;
+    var isSimples = User?.IsInRole("Simples") == true;
+    var isSuporte = User?.IsInRole("Suporte") == true;
+
+    int triaging = ViewBag.SupportTriagingCount is int a ? a : 0;
+    int openCount = ViewBag.SupportOpenCount is int b ? b : 0;
+}
+
+<!-- Hero Section -->
+<div class="hero-section-payhelp">
+    <div class="row align-items-center">
+        <div class="col-lg-6 text-center text-lg-start mb-4 mb-lg-0">
+            <div class="hero-icon">
+                <i class="fas fa-headset"></i>
+            </div>
+            <h1 class="hero-title">
+                Bem-vindo ao <span class="text-gradient-payhelp">PayHelp</span>
+            </h1>
+            <p class="hero-subtitle">
+                Sistema inteligente de suporte técnico com atendimento automatizado por IA
+            </p>
+
+            @if (!isAuth)
+            {
+                <div class="hero-actions">
+                    <a class="btn btn-hero-primary" href="@Url.Action("Login","Account")">
+                        <i class="fas fa-sign-in-alt me-2"></i> Fazer Login
+                    </a>
+                    <a class="btn btn-hero-secondary" href="@Url.Action("Register","Account")">
+                        <i class="fas fa-user-plus me-2"></i> Criar Conta
+                    </a>
+                </div>
+                <p class="hero-info">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Acesse com sua conta para abrir chamados ou acompanhar o atendimento
+                </p>
+            }
+            else
+            {
+                <p class="hero-welcome">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Você está conectado! Use o menu para acessar as funcionalidades.
+                </p>
+            }
+        </div>
+    </div>
+</div>
+
+@if (isAuth)
+{
+    <!-- Dashboard Cards -->
+    <section class="dashboard-section">
+        <div class="row g-4">
+            @if (isSimples)
+            {
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="dashboard-icon bg-primary">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <h3 class="dashboard-title">Meus Chamados</h3>
+                        <p class="dashboard-description">
+                            Visualize e acompanhe todos os seus chamados de suporte
+                        </p>
+                        <a class="btn btn-dashboard" href="@Url.Action("Minhas","Tickets")">
+                            <i class="fas fa-arrow-right me-2"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="dashboard-icon bg-success">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <h3 class="dashboard-title">Abrir Chamado</h3>
+                        <p class="dashboard-description">
+                            Crie um novo chamado de suporte técnico
+                        </p>
+                        <a class="btn btn-dashboard" href="@Url.Action("Abrir","Tickets")">
+                            <i class="fas fa-arrow-right me-2"></i> Abrir Novo
+                        </a>
+                    </div>
+                </div>
+            }
+
+            @if (isSuporte)
+            {
+                <div class="col-md-4">
+                    <div class="dashboard-card dashboard-card-highlight">
+                        <div class="dashboard-icon bg-info">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <h3 class="dashboard-title">Dashboard de Suporte</h3>
+                        <p class="dashboard-description">
+                            Gerencie todos os chamados em andamento
+                        </p>
+                        @if (triaging > 0 || openCount > 0)
+                        {
+                            <div class="dashboard-badge-container">
+                                @if (triaging > 0)
+                                {
+                                    <span class="badge bg-danger">@triaging em triagem IA</span>
+                                }
+                                @if (openCount > 0)
+                                {
+                                    <span class="badge bg-warning text-dark">@openCount abertos</span>
+                                }
+                            </div>
+                        }
+                        <a class="btn btn-dashboard" href="@Url.Action("Dashboard","Support")" id="dashboardLink">
+                            <i class="fas fa-arrow-right me-2"></i> Acessar Dashboard
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="dashboard-card">
+                        <div class="dashboard-icon bg-secondary">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3 class="dashboard-title">Mensagens Automáticas</h3>
+                        <p class="dashboard-description">
+                            Configure respostas pré-definidas
+                        </p>
+                        <a class="btn btn-dashboard" href="@Url.Action("Index","CannedMessages")">
+                            <i class="fas fa-arrow-right me-2"></i> Gerenciar
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="dashboard-card">
+                        <div class="dashboard-icon bg-purple">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3 class="dashboard-title">Relatórios</h3>
+                        <p class="dashboard-description">
+                            Visualize estatísticas e métricas
+                        </p>
+                        <a class="btn btn-dashboard" href="@Url.Action("Index","Reports")">
+                            <i class="fas fa-arrow-right me-2"></i> Ver Relatórios
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+}
+else
+{
+    <!-- Features Section para usuários não autenticados -->
+    <section class="features-section">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Recursos Principais</h2>
+            <p class="section-subtitle">Conheça as funcionalidades do PayHelp</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="feature-title">IA Integrada</h3>
+                    <p class="feature-description">
+                        Atendimento automatizado com inteligência artificial para respostas rápidas
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3 class="feature-title">Disponibilidade 24/7</h3>
+                    <p class="feature-description">
+                        Sistema disponível a qualquer hora para registrar e acompanhar seus chamados
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="feature-title">Relatórios Detalhados</h3>
+                    <p class="feature-description">
+                        Acompanhe métricas e estatísticas de atendimento em tempo real
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+            </div>
+        </div>
+    </section>
+}
+
+@if (isSuporte)
+{
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        const badge = document.getElementById('supportBadge');
+        if (badge) {
+            let triaging = parseInt(badge.dataset.triaging || '0', 10);
+            let openCount = parseInt(badge.dataset.open || '0', 10);
+
+            function renderBadge() {
+                if (!badge) return;
+                const parts = [];
+                if (triaging > 0) parts.push(`${triaging} IA`);
+                if (openCount > 0) parts.push(`${openCount} abertos`);
+                badge.textContent = parts.join(' · ');
+                badge.style.display = (triaging > 0 || openCount > 0) ? '' : 'none';
+            }
+
+            function toast(msg) {
+                // Notificação removida para evitar elementos flutuantes
+                console.log('Notificação:', msg);
+            }
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/hubs/chat")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("TriageStarted", () => {
+                triaging++;
+                renderBadge();
+                toast("Novo chamado em triagem de IA");
+            });
+
+            connection.on("TriageCleared", () => {
+                triaging = Math.max(0, triaging - 1);
+                renderBadge();
+            });
+
+            connection.start()
+                .then(() => connection.invoke("JoinSupport"))
+                .catch(err => console.error(err));
+
+            renderBadge();
+        }
+    </script>
+}}

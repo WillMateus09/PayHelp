@@ -1,0 +1,370 @@
+@model PayHelp.WebApp.Mvc.ViewModels.SupportDashboardViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var abertos = Model?.Abertos ?? new List<PayHelp.WebApp.Mvc.ViewModels.TicketListItemViewModel>();
+    var emAtendimento = Model?.EmAtendimento ?? new List<PayHelp.WebApp.Mvc.ViewModels.TicketListItemViewModel>();
+    var encerrados = Model?.Encerrados ?? new List<PayHelp.WebApp.Mvc.ViewModels.TicketListItemViewModel>();
+    var triaging = Model?.TriagingIds ?? new HashSet<Guid>();
+
+    var todos = abertos.Concat(emAtendimento).Concat(encerrados).ToList();
+
+    int Count(IEnumerable<PayHelp.WebApp.Mvc.ViewModels.TicketListItemViewModel> col) => col?.Count() ?? 0;
+
+    string StatusKey(string s) => (s ?? "").Replace(" ", "", StringComparison.OrdinalIgnoreCase).ToLowerInvariant();
+
+    string BadgeClass(string status)
+    {
+        var s = StatusKey(status);
+        return s switch
+        {
+            "aberto" => "badge-status-danger",
+            "ematendimento" => "badge-status-warning",
+            "encerrado" => "badge-status-success",
+            _ => "badge bg-light text-dark border"
+        };
+    }
+
+    string PrettyStatus(string status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) return "";
+        if (string.Equals(status, "EmAtendimento", StringComparison.OrdinalIgnoreCase)) return "Em Atendimento";
+        return status;
+    }
+}
+
+<!-- Header da Página -->
+<div class="page-header-modern mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h1 class="page-title-modern">
+                <i class="fas fa-headset text-gradient me-2"></i>
+                Painel do Suporte
+            </h1>
+            <p class="page-subtitle-modern">Gerencie todos os chamados de suporte em tempo real</p>
+        </div>
+    </div>
+</div>
+
+<!-- Alerta de Triagem IA -->
+<div id="triageAlertWrapper" class="alert alert-info alert-modern mb-4" role="alert" style="display:@((triaging.Any()) ? "" : "none")">
+    <i class="fas fa-robot fa-2x me-3"></i>
+    <div class="flex-grow-1">
+        <strong>IA em Ação!</strong>
+        <p class="mb-0">
+            Existem <strong id="triageAlertCount" data-count="@triaging.Count">@triaging.Count</strong> chamado(s) sendo analisados pela Triagem IA neste momento.
+        </p>
+    </div>
+    <a class="btn btn-outline-primary" href="@Url.Action("Dashboard", new { status = PayHelp.Domain.Enums.TicketStatus.Aberto })">
+        <i class="fas fa-eye me-2"></i>
+        Ver Abertos
+    </a>
+</div>
+
+<!-- Cards de Estatísticas -->
+
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stats-card-modern stats-primary">
+            <div class="stats-icon">
+                <i class="fas fa-list"></i>
+            </div>
+            <div class="stats-content">
+                <div class="stats-label">Total</div>
+                <div class="stats-value">@todos.Count</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stats-card-modern stats-danger">
+            <div class="stats-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="stats-content">
+                <div class="stats-label">Abertos</div>
+                <div class="stats-value">@Count(abertos)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stats-card-modern stats-warning">
+            <div class="stats-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stats-content">
+                <div class="stats-label">Em Atendimento</div>
+                <div class="stats-value">@Count(emAtendimento)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stats-card-modern stats-success">
+            <div class="stats-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stats-content">
+                <div class="stats-label">Encerrados</div>
+                <div class="stats-value">@Count(encerrados)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros e Busca -->
+<div class="card card-modern mb-4">
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="dashboard-filters">
+                <a class="filter-btn @(Model?.FiltroSelecionado == null ? "active" : "")" 
+                   href="@Url.Action("Dashboard", new { status = "" })">
+                    <i class="fas fa-th-large me-1"></i>
+                    Todos <span class="filter-count">@todos.Count</span>
+                </a>
+                <a class="filter-btn @(Model?.FiltroSelecionado?.ToString() == "Aberto" ? "active" : "")" 
+                   href="@Url.Action("Dashboard", new { status = PayHelp.Domain.Enums.TicketStatus.Aberto })">
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    Aberto <span class="filter-count">@Count(abertos)</span>
+                </a>
+                <a class="filter-btn @(Model?.FiltroSelecionado?.ToString() == "EmAtendimento" ? "active" : "")" 
+                   href="@Url.Action("Dashboard", new { status = PayHelp.Domain.Enums.TicketStatus.EmAtendimento })">
+                    <i class="fas fa-user-clock me-1"></i>
+                    Em Atendimento <span class="filter-count">@Count(emAtendimento)</span>
+                </a>
+                <a class="filter-btn @(Model?.FiltroSelecionado?.ToString() == "Encerrado" ? "active" : "")" 
+                   href="@Url.Action("Dashboard", new { status = PayHelp.Domain.Enums.TicketStatus.Encerrado })">
+                    <i class="fas fa-check-circle me-1"></i>
+                    Encerrado <span class="filter-count">@Count(encerrados)</span>
+                </a>
+            </div>
+
+            <div class="search-box-modern">
+                <i class="fas fa-search"></i>
+                <input id="filterSearch" type="search" class="search-input" placeholder="Buscar por título, status...">
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    IEnumerable<PayHelp.WebApp.Mvc.ViewModels.TicketListItemViewModel> itens =
+        Model?.FiltroSelecionado?.ToString() switch
+        {
+            "Aberto" => abertos,
+            "EmAtendimento" => emAtendimento,
+            "Encerrado" => encerrados,
+            _ => todos
+        };
+}
+
+<!-- Tabela de Chamados -->
+@if (!itens.Any())
+{
+    <div class="card card-modern">
+        <div class="card-body">
+            <div class="empty-state-modern">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <h5>Nenhum chamado encontrado</h5>
+                <p class="text-muted">Não há chamados com os filtros selecionados.</p>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card card-modern">
+        <div class="card-body">
+            <h5 class="card-title-modern mb-3">
+                <i class="fas fa-list me-2"></i>
+                Lista de Chamados (@itens.Count())
+            </h5>
+            <div class="table-responsive">
+                <table id="ticketsTable" class="table table-modern table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-heading me-1"></i> Título</th>
+                            <th class="text-center"><i class="fas fa-info-circle me-1"></i> Status</th>
+                            <th><i class="fas fa-calendar-plus me-1"></i> Criado</th>
+                            <th><i class="fas fa-calendar-check me-1"></i> Encerrado</th>
+                            <th class="text-center"><i class="fas fa-cog me-1"></i> Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var t in itens)
+                    {
+                        var statusRaw = t.Status.ToString();
+                        var statusKey = StatusKey(statusRaw);
+                        var iaAtiva = triaging.Contains(t.Id);
+
+                        <tr class="support-ticket-row" data-status="@statusKey" data-id="@t.Id">
+                            <td>
+                                <div class="ticket-title-cell">
+                                    <div class="fw-bold text-dark">@t.Titulo</div>
+                                    <div class="text-muted small">
+                                        <i class="fas fa-hashtag me-1"></i>ID: @t.Id.ToString().Substring(0, 8)
+                                    </div>
+                                    @if (iaAtiva && statusKey == "aberto")
+                                    {
+                                        <div class="mt-2">
+                                            <span class="badge-ia-active">
+                                                <i class="fas fa-robot me-1"></i> IA analisando...
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge @BadgeClass(statusRaw)">
+                                    @if (statusKey == "aberto")
+                                    {
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                    }
+                                    else if (statusKey == "ematendimento")
+                                    {
+                                        <i class="fas fa-clock me-1"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-check-circle me-1"></i>
+                                    }
+                                    @PrettyStatus(statusRaw)
+                                </span>
+                            </td>
+                            <td>@t.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if (t.EncerradoEm != null) 
+                                { 
+                                    <span>@t.EncerradoEm.Value.ToString("dd/MM/yyyy HH:mm")</span> 
+                                } 
+                                else 
+                                { 
+                                    <span class="text-muted">—</span> 
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                    @if (statusKey == "aberto" || statusKey == "ematendimento")
+                                    {
+                                        <form method="post" action="@Url.Action("Assumir", "Support", new { id = t.Id })" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-action-assumir btn-sm">
+                                                <i class="fas fa-hand-paper me-1"></i> Assumir
+                                            </button>
+                                        </form>
+                                    }
+                                    @if (t.EncerradoEm != null)
+                                    {
+                                        if (t.PossuiResolucao)
+                                        {
+                                            <a class="btn btn-action-resolucao-locked btn-sm" 
+                                               href="@Url.Action("ResolucaoFinal", "Support", new { ticketId = t.Id })" 
+                                               title="Ver Resolução Final (bloqueada para edição)">
+                                                <i class="fas fa-lock me-1"></i> Resolução
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a class="btn btn-action-resolucao btn-sm" 
+                                               href="@Url.Action("ResolucaoFinal", "Support", new { ticketId = t.Id })" 
+                                               title="Registrar Resolução Final">
+                                                <i class="fas fa-file-medical me-1"></i> Resolução
+                                            </a>
+                                        }
+                                    }
+                                    <a class="btn btn-action-view btn-sm" href="@Url.Action("Chat", "Support", new { id = t.Id })">
+                                        <i class="fas fa-eye me-1"></i> Ver
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        const search = document.getElementById('filterSearch');
+        const rows = document.querySelectorAll('#ticketsTable tbody tr');
+        search?.addEventListener('input', () => {
+            const q = (search.value || '').trim().toLowerCase();
+            rows.forEach(tr => {
+                const text = tr.innerText.toLowerCase();
+                tr.style.display = !q || text.includes(q) ? '' : 'none';
+            });
+        });
+
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/chat")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("TriageStarted", payload => {
+            const id = payload?.ticketId;
+            if (!id) return;
+            const tr = document.querySelector(`#ticketsTable tbody tr[data-id="${id}"]`);
+            if (tr) {
+                const hadBadge = !!tr.querySelector('.ia-badge');
+                if (!hadBadge) {
+                    const cell = tr.querySelector('td');
+                    const div = document.createElement('div');
+                    div.className = 'mt-1';
+                    div.innerHTML = '<span class="badge text-bg-info ia-badge">IA em triagem</span>';
+                    cell?.appendChild(div);
+                    adjustTriageCounter(+1);
+                }
+                tr.classList.add('table-info');
+                setTimeout(() => tr.classList.remove('table-info'), 1500);
+            }
+        });
+
+        connection.on("TriageCleared", payload => {
+            const id = payload?.ticketId;
+            if (!id) return;
+            const tr = document.querySelector(`#ticketsTable tbody tr[data-id="${id}"]`);
+            if (tr) {
+                const hadBadge = !!tr.querySelector('.ia-badge');
+                tr.querySelectorAll('.ia-badge').forEach(e => e.remove());
+                if (hadBadge) adjustTriageCounter(-1);
+            }
+        });
+
+
+        connection.on("StatusChanged", payload => {
+            const id = payload?.ticketId;
+            const status = (payload?.status || '').toString();
+            if (!id || !status) return;
+            const tr = document.querySelector(`#ticketsTable tbody tr[data-id="${id}"]`);
+            if (!tr) return;
+            const badge = tr.querySelector('td.text-center .badge');
+            if (badge) badge.textContent = PrettyStatus(status);
+            tr.dataset.status = StatusKey(status);
+            tr.className = `row-status-${StatusKey(status)}`;
+
+            tr.classList.add('table-warning');
+            setTimeout(() => tr.classList.remove('table-warning'), 1200);
+
+            setTimeout(() => window.location.reload(), 300);
+        });
+
+        connection.start()
+            .then(() => connection.invoke("JoinSupport"))
+            .catch(err => console.error(err));
+
+        function adjustTriageCounter(delta) {
+            const wrap = document.getElementById('triageAlertWrapper');
+            const countEl = document.getElementById('triageAlertCount');
+            if (!wrap || !countEl) return;
+            let v = parseInt(countEl.dataset.count || '0', 10) + delta;
+            if (isNaN(v) || v < 0) v = 0;
+            countEl.dataset.count = String(v);
+            countEl.textContent = v;
+            wrap.style.display = v > 0 ? '' : 'none';
+        }
+    </script>
+}

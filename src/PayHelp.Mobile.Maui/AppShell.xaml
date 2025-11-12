@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Shell
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:PayHelp.Mobile.Maui.Views"
+    x:Class="PayHelp.Mobile.Maui.AppShell"
+    Title="PayHelp"
+    Shell.FlyoutBehavior="Disabled">
+
+    <!-- Top-level routes for navigation after login -->
+    <TabBar>
+        <!-- Início como página inicial (estilo web) -->
+        <ShellContent Title="Início" Route="home" ContentTemplate="{DataTemplate views:HomePage}" />
+        <!-- Dashboard agora mostra a lista de chamados -->
+        <ShellContent Title="Dashboard" Route="dashboard" ContentTemplate="{DataTemplate views:ChamadosPage}" />
+        <ShellContent Title="Relatórios" Route="relatorios" ContentTemplate="{DataTemplate views:RelatoriosPage}" />
+        <ShellContent Title="Mensagens" Route="mensagens" ContentTemplate="{DataTemplate views:MensagensPage}" />
+    </TabBar>
+
+    <!-- Additional routes not shown in tab bar -->
+    <ShellContent Route="abrir-chamado" ContentTemplate="{DataTemplate views:AbrirChamadoPage}" />
+    <ShellContent Route="chamado-detalhe" ContentTemplate="{DataTemplate views:ChamadoDetalhePage}" />
+</Shell>

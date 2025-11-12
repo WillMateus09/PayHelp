@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.UserHomePage"
+             x:Name="PageRef"
+             Title="Início">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="24">
+            
+         <!-- Hero Section -->
+         <Border Style="{StaticResource HeroCard}">
+          <VerticalStackLayout Spacing="12">
+              <Label Text="PayHelp" 
+                  Style="{StaticResource H1}" 
+                  TextColor="White"/>
+              <Label Text="Bem-vindo! Como podemos ajudar?" 
+                  Style="{StaticResource Subtitle}" 
+                  TextColor="#E0E7FF"/>
+              <Grid ColumnDefinitions="*,Auto" Padding="0,4,0,0">
+               <Label Grid.Column="0"
+                   Text="{Binding DisplayUser}"
+                   TextColor="#E0E7FF"
+                   Style="{StaticResource Caption}"/>
+               <Button Grid.Column="1"
+                    Text="Sair"
+                    Style="{StaticResource HeroGhostButton}"
+                    Command="{Binding LogoutCommand}" />
+              </Grid>
+          </VerticalStackLayout>
+         </Border>
+
+            <!-- Quick Actions Section -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Acesso Rápido" Style="{StaticResource H4}" />
+                
+                <!-- Action Cards -->
+                <Frame Style="{StaticResource Card}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnNavigateClicked" CommandParameter="chamados" />
+                    </Frame.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="16">
+                        <Border BackgroundColor="{StaticResource Primary}"
+                                StrokeThickness="0"
+                                WidthRequest="56"
+                                HeightRequest="56">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Label Text="📋" 
+                                   FontSize="28"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"/>
+                        </Border>
+                        <VerticalStackLayout VerticalOptions="Center" Spacing="4">
+                            <Label Text="Meus Chamados" 
+                                   Style="{StaticResource Body}"
+                                   FontAttributes="Bold"/>
+                            <Label Text="Acompanhe o status dos seus tickets" 
+                                   Style="{StaticResource Caption}"/>
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </Frame>
+
+                <Frame Style="{StaticResource Card}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnNavigateClicked" CommandParameter="abrir-chamado" />
+                    </Frame.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="16">
+                        <Border BackgroundColor="{StaticResource Success}"
+                                StrokeThickness="0"
+                                WidthRequest="56"
+                                HeightRequest="56">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Label Text="➕" 
+                                   FontSize="28"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"/>
+                        </Border>
+                        <VerticalStackLayout VerticalOptions="Center" Spacing="4">
+                            <Label Text="Abrir Chamado" 
+                                   Style="{StaticResource Body}"
+                                   FontAttributes="Bold"/>
+                            <Label Text="Precisa de ajuda? Abra um novo ticket" 
+                                   Style="{StaticResource Caption}"/>
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+
+            <!-- Help Section -->
+            <Frame Style="{StaticResource InfoCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Dicas Úteis" 
+                           Style="{StaticResource Body}"
+                           FontAttributes="Bold"/>
+                    
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="•" Style="{StaticResource Body}"/>
+                            <Label Text="Descreva seu problema com o máximo de detalhes" 
+                                   Style="{StaticResource Body}"/>
+                        </HorizontalStackLayout>
+                        
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="•" Style="{StaticResource Body}"/>
+                            <Label Text="Acompanhe as atualizações dos seus chamados" 
+                                   Style="{StaticResource Body}"/>
+                        </HorizontalStackLayout>
+                        
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="•" Style="{StaticResource Body}"/>
+                            <Label Text="Responda às mensagens para agilizar o atendimento" 
+                                   Style="{StaticResource Body}"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

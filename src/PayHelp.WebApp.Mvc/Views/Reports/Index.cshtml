@@ -1,0 +1,299 @@
+@model PayHelp.WebApp.Mvc.ViewModels.ReportFilterViewModel
+@using PayHelp.Domain.Enums
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var result = ViewBag.Resultado as List<PayHelp.WebApp.Mvc.ViewModels.ReportEntryViewModel> ?? new();
+    int total = result.Count;
+    int encerrados = result.Count(r => r.StatusFinal == TicketStatus.Encerrado);
+    int emAtendimento = result.Count(r => r.StatusFinal == TicketStatus.EmAtendimento);
+    // Deriva "Abertos" do total menos (encerrados + em atendimento) para evitar qualquer divergência de enum/parsing
+    int abertos = Math.Max(0, total - (encerrados + emAtendimento));
+}
+
+<!-- Header da Página -->
+<div class="page-header-modern mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h1 class="page-title-modern">
+                <i class="fas fa-chart-line text-gradient me-2"></i>
+                Relatórios e Estatísticas
+            </h1>
+            <p class="page-subtitle-modern">Análise detalhada de chamados e performance do sistema</p>
+        </div>
+        <div class="page-stats">
+            <div class="stat-badge-modern">
+                <i class="fas fa-database me-2"></i>
+                <span>Dados em tempo real</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Aviso"] is string aviso)
+{
+    <div class="alert alert-warning alert-modern">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        @aviso
+    </div>
+}
+@if (!ViewData.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="alert alert-danger alert-modern" role="alert"></div>
+}
+<!-- Filtros de Relatório -->
+<div class="card card-modern mb-4">
+    <div class="card-body">
+        <h5 class="card-title-modern mb-3">
+            <i class="fas fa-filter me-2"></i>
+            Filtros de Pesquisa
+        </h5>
+        <form method="post" asp-action="Gerar" class="row g-3">
+            @Html.AntiForgeryToken()
+            <div class="col-md-3">
+                <label class="form-label-modern">
+                    <i class="fas fa-calendar-alt me-1"></i> Data Inicial
+                </label>
+                <input class="form-control form-control-modern" type="datetime-local" asp-for="De" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-modern">
+                    <i class="fas fa-calendar-check me-1"></i> Data Final
+                </label>
+                <input class="form-control form-control-modern" type="datetime-local" asp-for="Ate" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-modern">
+                    <i class="fas fa-tasks me-1"></i> Status
+                </label>
+                <select class="form-select form-control-modern" asp-for="Status">
+                    <option value="">Todos os status</option>
+                    @foreach (var s in Enum.GetValues<TicketStatus>())
+                    {
+                        <option value="@s" selected="@(Model?.Status == s)">@s</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-gradient-primary w-100" type="submit">
+                    <i class="fas fa-chart-bar me-2"></i> Gerar Relatório
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (total > 0)
+{
+    var encerradosComDuracao = result.Where(r => r.StatusFinal == TicketStatus.Encerrado && r.Duracao.HasValue).ToList();
+    TimeSpan? mediaDuracao = encerradosComDuracao.Any() ? TimeSpan.FromSeconds(encerradosComDuracao.Average(r => r.Duracao!.Value.TotalSeconds)) : null;
+    var porUsuario = result
+        .GroupBy(r => r.SolicitanteEmail ?? "(desconhecido)")
+        .Select(g => new { Email = g.Key, Total = g.Count(), Encerrados = g.Count(x => x.StatusFinal == TicketStatus.Encerrado) })
+        .OrderByDescending(x => x.Total)
+        .Take(10)
+        .ToList();
+
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card-modern stats-primary">
+                <div class="stats-icon">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-label">Total de Chamados</div>
+                    <div class="stats-value">@total</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card-modern stats-success">
+                <div class="stats-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-label">Encerrados</div>
+                    <div class="stats-value">@encerrados</div>
+                    <div class="stats-percentage">@(total > 0 ? Math.Round((double)encerrados / total * 100, 1) : 0)%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card-modern stats-warning">
+                <div class="stats-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-label">Em Atendimento</div>
+                    <div class="stats-value">@emAtendimento</div>
+                    <div class="stats-percentage">@(total > 0 ? Math.Round((double)emAtendimento / total * 100, 1) : 0)%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card-modern stats-danger">
+                <div class="stats-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-label">Abertos</div>
+                    <div class="stats-value">@abertos</div>
+                    <div class="stats-percentage">@(total > 0 ? Math.Round((double)abertos / total * 100, 1) : 0)%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Duração Média -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card card-modern">
+                <div class="card-body text-center">
+                    <i class="fas fa-hourglass-half fa-3x text-gradient mb-3"></i>
+                    <h5 class="card-title-modern">Duração Média (Encerrados)</h5>
+                    <div class="display-4 text-gradient fw-bold">@(mediaDuracao?.ToString(@"hh\:mm\:ss") ?? "—")</div>
+                    <p class="text-muted mt-2">@encerradosComDuracao.Count chamados analisados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card card-modern">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-3x text-gradient mb-3"></i>
+                    <h5 class="card-title-modern">Taxa de Resolução</h5>
+                    <div class="display-4 text-gradient fw-bold">@(total > 0 ? Math.Round((double)encerrados / total * 100, 1) : 0)%</div>
+                    <p class="text-muted mt-2">@encerrados de @total chamados resolvidos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top 10 Solicitantes -->
+    <div class="card card-modern mb-4">
+        <div class="card-body">
+            <h5 class="card-title-modern mb-3">
+                <i class="fas fa-trophy me-2"></i>
+                Top 10 Solicitantes por Quantidade de Chamados
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-modern table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag me-1"></i> Posição</th>
+                            <th><i class="fas fa-envelope me-1"></i> Email</th>
+                            <th class="text-center"><i class="fas fa-ticket-alt me-1"></i> Total</th>
+                            <th class="text-center"><i class="fas fa-check-circle me-1"></i> Encerrados</th>
+                            <th class="text-center"><i class="fas fa-chart-pie me-1"></i> Taxa de Resolução</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int posicao = 1; }
+                        @foreach (var u in porUsuario)
+                        {
+                            var taxaResolucao = u.Total > 0 ? Math.Round((double)u.Encerrados / u.Total * 100, 1) : 0;
+                            <tr>
+                                <td>
+                                    <span class="badge-position-modern">
+                                        @if (posicao == 1) { <i class="fas fa-crown text-warning"></i> }
+                                        @posicao
+                                    </span>
+                                </td>
+                                <td>@u.Email</td>
+                                <td class="text-center">
+                                    <span class="badge badge-total-modern">@u.Total</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge badge-success-modern">@u.Encerrados</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="progress progress-modern">
+                                        <div class="progress-bar" role="progressbar" style="width: @taxaResolucao%" aria-valuenow="@taxaResolucao" aria-valuemin="0" aria-valuemax="100">
+                                            @taxaResolucao%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            posicao++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Tabela Detalhada de Chamados -->
+<div class="card card-modern">
+    <div class="card-body">
+        <h5 class="card-title-modern mb-3">
+            <i class="fas fa-list-ul me-2"></i>
+            Detalhamento de Chamados
+        </h5>
+        
+        @if (result.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-modern table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag me-1"></i> Ticket</th>
+                            <th><i class="fas fa-user me-1"></i> Solicitante</th>
+                            <th><i class="fas fa-info-circle me-1"></i> Status</th>
+                            <th><i class="fas fa-calendar-plus me-1"></i> Criado Em</th>
+                            <th><i class="fas fa-calendar-check me-1"></i> Encerrado Em</th>
+                            <th><i class="fas fa-stopwatch me-1"></i> Duração</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var r in result)
+                    {
+                        <tr>
+                            <td>
+                                <span class="badge-ticket-modern">#@r.TicketId</span>
+                            </td>
+                            <td>@r.SolicitanteEmail</td>
+                            <td>
+                                @if (r.StatusFinal == TicketStatus.Encerrado)
+                                {
+                                    <span class="badge badge-status-success"><i class="fas fa-check-circle me-1"></i> Encerrado</span>
+                                }
+                                else if (r.StatusFinal == TicketStatus.EmAtendimento)
+                                {
+                                    <span class="badge badge-status-warning"><i class="fas fa-clock me-1"></i> Em Atendimento</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-status-danger"><i class="fas fa-exclamation-circle me-1"></i> Aberto</span>
+                                }
+                            </td>
+                            <td>@r.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(r.EncerradoEm?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                            <td>
+                                @if (r.Duracao.HasValue)
+                                {
+                                    <span class="duration-badge-modern">
+                                        <i class="fas fa-hourglass-half me-1"></i>
+                                        @r.Duracao.Value.ToString(@"hh\:mm\:ss")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state-modern">
+                <i class="fas fa-chart-line fa-3x mb-3"></i>
+                <h5>Nenhum dado encontrado</h5>
+                <p class="text-muted">Use os filtros acima para gerar um relatório</p>
+            </div>
+        }
+    </div>
+</div>
