@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                         xmlns:vm="clr-namespace:PayHelp.Mobile.Maui.ViewModels"
+                         xmlns:utils="clr-namespace:PayHelp.Mobile.Maui.Utilities"
+             x:Class="PayHelp.Mobile.Maui.Views.MarcarResolvidoPage"
+             Title="Marcar como Resolvido"
+             BackgroundColor="{DynamicResource PageBackgroundColor}">
+
+        <ContentPage.Resources>
+                <ResourceDictionary>
+                        <utils:NotaToColorConverter x:Key="NotaToColorConverter" />
+                        <utils:NotaToStarTextConverter x:Key="NotaToStarTextConverter" />
+                </ResourceDictionary>
+        </ContentPage.Resources>
+
+    <ContentPage.BindingContext>
+        <vm:MarcarResolvidoViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <!-- Título -->
+            <Label Text="✅ Seu problema foi resolvido?"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   TextColor="{DynamicResource Primary}"
+                   HorizontalOptions="Center" />
+
+            <!-- Orientação -->
+            <Label Text="Conte se a IA conseguiu te ajudar, se tem algo que poderia melhorar ou se o atendimento foi rápido. Seu feedback é muito importante!"
+                   FontSize="14"
+                   TextColor="{DynamicResource Gray600}"
+                   HorizontalTextAlignment="Center"
+                   Margin="0,0,0,10" />
+
+            <!-- Avaliação por Estrelas -->
+            <Label Text="Avalie sua experiência:"
+                   FontSize="16"
+                   FontAttributes="Bold"
+                   Margin="0,10,0,5" />
+
+            <Label Text="{Binding NotaDescricao}"
+                   FontSize="14"
+                   FontAttributes="Bold"
+                   TextColor="{DynamicResource Primary}"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,10" />
+
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                <Button Text="{Binding NotaUsuario, Converter={StaticResource NotaToStarTextConverter}, ConverterParameter=1}"
+                        FontSize="32"
+                        BackgroundColor="Transparent"
+                        TextColor="{Binding NotaUsuario, Converter={StaticResource NotaToColorConverter}, ConverterParameter=1}"
+                        Command="{Binding SelecionarNotaCommand}"
+                         CommandParameter="{x:Int32 1}" />
+                <Button Text="{Binding NotaUsuario, Converter={StaticResource NotaToStarTextConverter}, ConverterParameter=2}"
+                        FontSize="32"
+                        BackgroundColor="Transparent"
+                        TextColor="{Binding NotaUsuario, Converter={StaticResource NotaToColorConverter}, ConverterParameter=2}"
+                        Command="{Binding SelecionarNotaCommand}"
+                         CommandParameter="{x:Int32 2}" />
+                <Button Text="{Binding NotaUsuario, Converter={StaticResource NotaToStarTextConverter}, ConverterParameter=3}"
+                        FontSize="32"
+                        BackgroundColor="Transparent"
+                        TextColor="{Binding NotaUsuario, Converter={StaticResource NotaToColorConverter}, ConverterParameter=3}"
+                        Command="{Binding SelecionarNotaCommand}"
+                         CommandParameter="{x:Int32 3}" />
+                <Button Text="{Binding NotaUsuario, Converter={StaticResource NotaToStarTextConverter}, ConverterParameter=4}"
+                        FontSize="32"
+                        BackgroundColor="Transparent"
+                        TextColor="{Binding NotaUsuario, Converter={StaticResource NotaToColorConverter}, ConverterParameter=4}"
+                        Command="{Binding SelecionarNotaCommand}"
+                         CommandParameter="{x:Int32 4}" />
+                <Button Text="{Binding NotaUsuario, Converter={StaticResource NotaToStarTextConverter}, ConverterParameter=5}"
+                        FontSize="32"
+                        BackgroundColor="Transparent"
+                        TextColor="{Binding NotaUsuario, Converter={StaticResource NotaToColorConverter}, ConverterParameter=5}"
+                        Command="{Binding SelecionarNotaCommand}"
+                         CommandParameter="{x:Int32 5}" />
+            </HorizontalStackLayout>
+
+            <!-- Campo de Feedback -->
+            <Label Text="Seu comentário:"
+                   FontSize="16"
+                   FontAttributes="Bold"
+                   Margin="0,20,0,5" />
+
+            <Editor Text="{Binding FeedbackUsuario}"
+                    Placeholder="Digite aqui seu feedback sobre o atendimento..."
+                    HeightRequest="150"
+                    MaxLength="2000"
+                    BackgroundColor="{DynamicResource Gray100}"
+                    TextColor="{DynamicResource Gray900}" />
+
+            <Label Text="{Binding ContadorCaracteres}"
+                   FontSize="12"
+                   TextColor="{DynamicResource Gray600}"
+                   HorizontalOptions="End"
+                   Margin="0,5,0,0" />
+
+            <!-- Botões de Ação -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,20,0,0">
+                <Button Text="Cancelar"
+                        Grid.Column="0"
+                        BackgroundColor="{DynamicResource Gray300}"
+                        TextColor="{DynamicResource Gray900}"
+                        Command="{Binding CancelarCommand}" />
+
+                <Button Text="✓ Confirmar Resolução"
+                        Grid.Column="1"
+                        BackgroundColor="{DynamicResource Success}"
+                        TextColor="White"
+                        Command="{Binding ConfirmarCommand}" />
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -59,6 +59,9 @@ public class ReportsController : Controller
         public TimeSpan? Duracao { get; set; }
         public DateTime CriadoEmUtc { get; set; }
         public DateTime? EncerradoEmUtc { get; set; }
+        public bool ResolvidoPeloUsuario { get; set; }
+        public string? FeedbackUsuario { get; set; }
+        public int? NotaUsuario { get; set; }
     }
 
     [HttpPost]
@@ -90,7 +93,10 @@ public class ReportsController : Controller
                 StatusFinal = Enum.TryParse<TicketStatus>(r.Status ?? string.Empty, true, out var st) ? st : TicketStatus.Aberto,
                 CriadoEm = r.CriadoEmUtc.ToLocalTime(),
                 EncerradoEm = r.EncerradoEmUtc?.ToLocalTime(),
-                Duracao = r.Duracao
+                Duracao = r.Duracao,
+                ResolvidoPeloUsuario = r.ResolvidoPeloUsuario,
+                FeedbackUsuario = r.FeedbackUsuario,
+                NotaUsuario = r.NotaUsuario
             }).ToList();
             return (mapped, false, null);
         }
@@ -111,7 +117,10 @@ public class ReportsController : Controller
                 StatusFinal = r.StatusFinal,
                 CriadoEm = r.CriadoEmUtc.ToLocalTime(),
                 EncerradoEm = r.EncerradoEmUtc?.ToLocalTime(),
-                Duracao = r.Duracao
+                Duracao = r.Duracao,
+                ResolvidoPeloUsuario = r.ResolvidoPeloUsuario,
+                FeedbackUsuario = r.FeedbackUsuario,
+                NotaUsuario = r.NotaUsuario
             }).ToList();
             return (mapped, true, null);
         }

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.FeedbackListaPage"
+             Title="Feedbacks dos Usuários"
+             Appearing="ContentPage_Appearing">
+    <Grid RowDefinitions="Auto,*" Padding="20" RowSpacing="20">
+        
+        <!-- Header -->
+        <VerticalStackLayout Spacing="12">
+            <Label Text="📝 Feedbacks Recebidos" 
+                   Style="{StaticResource H3}"/>
+            <Label Text="Avaliações e comentários dos usuários sobre resoluções via IA" 
+                   Style="{StaticResource Caption}"/>
+            <Button Text="Atualizar" 
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding CarregarCommand}"
+                    HorizontalOptions="Start"
+                    Padding="16,0"
+                    HeightRequest="44"/>
+        </VerticalStackLayout>
+
+        <!-- Feedbacks List -->
+        <CollectionView Grid.Row="1" 
+                        ItemsSource="{Binding Feedbacks}" 
+                        SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <VerticalStackLayout Spacing="12">
+                            
+                            <!-- Header do Feedback -->
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="🎫" FontSize="24"/>
+                                <VerticalStackLayout Spacing="4" HorizontalOptions="FillAndExpand">
+                                    <Label Text="{Binding TicketTitulo}" 
+                                           Style="{StaticResource Body}"
+                                           FontAttributes="Bold"
+                                           LineBreakMode="TailTruncation"/>
+                                    <Label Text="{Binding UsuarioEmail}" 
+                                           Style="{StaticResource Caption}"/>
+                                </VerticalStackLayout>
+                            </HorizontalStackLayout>
+
+                            <!-- Separador -->
+                            <BoxView HeightRequest="1" 
+                                     Color="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"/>
+
+                            <!-- Avaliação -->
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="Avaliação:" 
+                                       Style="{StaticResource Body}"
+                                       FontAttributes="Bold"/>
+                                <Label Text="{Binding NotaTexto}" 
+                                       Style="{StaticResource Body}"
+                                       TextColor="{StaticResource Warning}"/>
+                            </HorizontalStackLayout>
+
+                            <!-- Comentário -->
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Comentário:" 
+                                       Style="{StaticResource Body}"
+                                       FontAttributes="Bold"/>
+                                <Frame Style="{StaticResource InfoCard}" 
+                                       Padding="12">
+                                    <Label Text="{Binding Comentario}" 
+                                           Style="{StaticResource Body}"
+                                           LineBreakMode="WordWrap"/>
+                                </Frame>
+                            </VerticalStackLayout>
+
+                            <!-- Data -->
+                            <Label Text="{Binding DataCriacao, StringFormat='Recebido em: {0:dd/MM/yyyy HH:mm}'}" 
+                                   Style="{StaticResource Caption}"
+                                   HorizontalOptions="End"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            
+            <!-- Empty State -->
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" 
+                                   VerticalOptions="Center"
+                                   Spacing="16"
+                                   Padding="40">
+                    <Label Text="📭" 
+                           FontSize="64"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Nenhum feedback recebido ainda" 
+                           Style="{StaticResource Body}"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Feedbacks aparecerão aqui quando usuários resolverem chamados via IA" 
+                           Style="{StaticResource Caption}"
+                           HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+    </Grid>
+</ContentPage>

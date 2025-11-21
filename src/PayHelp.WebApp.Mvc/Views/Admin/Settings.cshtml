@@ -1,0 +1,37 @@
+@model PayHelp.WebApp.Mvc.ViewModels.AdminSettingsViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header-modern mb-4">
+    <h1 class="page-title-modern"><i class="fas fa-sliders-h me-2"></i> Configurações</h1>
+    <p class="page-subtitle-modern">Palavra de verificação do Suporte e URL pública do servidor</p>
+</div>
+
+@if (TempData["Sucesso"] != null)
+{
+    <div class="alert alert-success">@TempData["Sucesso"]</div>
+}
+@if (TempData["Erro"] != null)
+{
+    <div class="alert alert-danger">@TempData["Erro"]</div>
+}
+
+<div class="card card-modern">
+    <div class="card-body">
+        <form method="post" action="@Url.Action("SaveSettings","Admin")">
+            @Html.AntiForgeryToken()
+            <div class="mb-3">
+                <label class="form-label">Palavra de Verificação do Suporte</label>
+                <input class="form-control" name="SupportVerificationWord" value="@Model.SupportVerificationWord" />
+                <small class="text-muted">Usada no cadastro de usuários de Suporte.</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">URL Pública do Servidor</label>
+                <input class="form-control" name="PublicBaseUrl" value="@Model.PublicBaseUrl" placeholder="http://192.168.15.109:5236" />
+                <small class="text-muted">Ex.: http://SEU_IP:5236 — usado pelos clientes Web/Desktop.</small>
+            </div>
+            <button class="btn btn-primary"><i class="fas fa-save me-1"></i> Salvar</button>
+        </form>
+    </div>
+</div>

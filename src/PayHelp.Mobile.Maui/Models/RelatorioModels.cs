@@ -17,6 +17,9 @@ public class RelatorioItem
     public TimeSpan? Duracao { get; set; }
     public DateTime CriadoEmUtc { get; set; }
     public DateTime? EncerradoEmUtc { get; set; }
+    public bool ResolvidoPeloUsuario { get; set; }
+    public string? FeedbackUsuario { get; set; }
+    public int? NotaUsuario { get; set; }
 }
 
 public class RelatorioResumo
@@ -25,6 +28,7 @@ public class RelatorioResumo
     public int Abertos { get; set; }
     public int Encerrados { get; set; }
     public int EmAtendimento { get; set; }
+    public int ChamadosResolvidosIA { get; set; }
     public double TempoMedioResolucaoHoras { get; set; }
     public double TaxaResolucaoPercent { get; set; }
 }

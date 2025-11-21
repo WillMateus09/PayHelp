@@ -45,7 +45,11 @@ public class ChamadoService
             Status = x.Status ?? string.Empty,
             DataAbertura = x.CriadoEmUtc,
             EncerradoEmUtc = x.EncerradoEmUtc,
-            Triaging = x.Triaging
+            Triaging = x.Triaging,
+            ResolvidoViaIA = x.ResolvidoViaIA,
+            DataResolvidoUsuario = x.DataResolvidoUsuario,
+            NotaUsuario = x.NotaUsuario,
+            FeedbackUsuario = x.FeedbackUsuario
         }).ToList();
     }
 
@@ -61,7 +65,11 @@ public class ChamadoService
             Status = x.Status ?? string.Empty,
             DataAbertura = x.CriadoEmUtc,
             EncerradoEmUtc = x.EncerradoEmUtc,
-            Triaging = x.Triaging
+            Triaging = x.Triaging,
+            ResolvidoViaIA = x.ResolvidoViaIA,
+            DataResolvidoUsuario = x.DataResolvidoUsuario,
+            NotaUsuario = x.NotaUsuario,
+            FeedbackUsuario = x.FeedbackUsuario
         }).ToList();
     }
 
@@ -80,6 +88,11 @@ public class ChamadoService
             EncerradoEmUtc = d.EncerradoEmUtc,
             Triaging = d.Triaging,
             ResolucaoFinal = d.ResolucaoFinal,
+            SupportUserId = d.SupportUserId,
+            DataResolvidoUsuario = d.DataResolvidoUsuario,
+            NotaUsuario = d.NotaUsuario,
+            FeedbackUsuario = d.FeedbackUsuario,
+            ResolvidoViaIA = d.ResolvidoViaIA,
             Mensagens = (d.Mensagens ?? new())
                 .OrderBy(m => m.EnviadoEmUtc)
                 .Select(m => new TicketMessageDto
@@ -146,6 +159,17 @@ public class ChamadoService
         return (false, string.IsNullOrWhiteSpace(txt) ? "Falha ao registrar a resolução final." : txt);
     }
 
+    public async Task<(bool ok, string? error)> ResolverPorUsuarioAsync(Guid ticketId, int nota, string feedback, CancellationToken ct = default)
+    {
+        var client = _factory.CreateClient("api");
+        var userIdStr = await SecureStorage.Default.GetAsync("user_id");
+        Guid.TryParse(userIdStr, out var userId);
+        
+        var res = await client.PostAsJsonAsync($"tickets/{ticketId}/resolver-usuario", new { UsuarioId = userId, Nota = nota, Feedback = feedback }, ct);
+        if (res.IsSuccessStatusCode) return (true, null);
+        var txt = await res.Content.ReadAsStringAsync(ct);
+        return (false, string.IsNullOrWhiteSpace(txt) ? "Falha ao registrar feedback." : txt);
+    }
 
     private record CreateResponse(Guid id, string? titulo, string? status, DateTime criadoEmUtc);
     private record ListItemResponse
@@ -156,6 +180,10 @@ public class ChamadoService
         public DateTime CriadoEmUtc { get; init; }
         public DateTime? EncerradoEmUtc { get; init; }
         public bool Triaging { get; init; }
+        public bool ResolvidoViaIA { get; init; }
+        public DateTime? DataResolvidoUsuario { get; init; }
+        public int? NotaUsuario { get; init; }
+        public string? FeedbackUsuario { get; init; }
     }
     private record DetailResponse
     {
@@ -168,6 +196,11 @@ public class ChamadoService
         public List<DetailMessage>? Mensagens { get; init; }
         public bool Triaging { get; init; }
         public string? ResolucaoFinal { get; init; }
+        public Guid? SupportUserId { get; init; }
+        public DateTime? DataResolvidoUsuario { get; init; }
+        public int? NotaUsuario { get; init; }
+        public string? FeedbackUsuario { get; init; }
+        public bool ResolvidoViaIA { get; init; }
     }
     private record DetailMessage
     {

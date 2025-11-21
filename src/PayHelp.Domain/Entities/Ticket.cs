@@ -13,6 +13,12 @@ public class Ticket
     public DateTime CriadoEmUtc { get; set; } = DateTime.UtcNow;
     public DateTime? EncerradoEmUtc { get; set; }
     public List<TicketMessage> Mensagens { get; set; } = new();
+    
+    // Novos campos para resolução pelo usuário
+    public bool ResolvidoPeloUsuario { get; set; } = false;
+    public string? FeedbackUsuario { get; set; }
+    public int? NotaUsuario { get; set; }  // 1 a 5 estrelas
+    public DateTime? DataResolvidoUsuario { get; set; }
 }
 
 public class TicketMessage
@@ -42,4 +48,9 @@ public class ReportEntry
     public TimeSpan? Duracao { get; set; }
     public DateTime CriadoEmUtc { get; set; }
     public DateTime? EncerradoEmUtc { get; set; }
+    
+    // Campos para relatórios de resolução por IA
+    public bool ResolvidoPeloUsuario { get; set; }
+    public string? FeedbackUsuario { get; set; }
+    public int? NotaUsuario { get; set; }
 }

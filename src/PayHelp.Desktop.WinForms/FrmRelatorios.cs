@@ -17,6 +17,7 @@ namespace PayHelp.Desktop.WinForms
         private Label? lblResumoAbertos;
         private Label? lblResumoMedia;
         private Label? lblResumoTaxa;
+        private Label? lblResumoResolvidosIA;
 
         public FrmRelatorios(ApiClient api)
         {
@@ -76,6 +77,12 @@ namespace PayHelp.Desktop.WinForms
                     backColor = Color.FromArgb(190, 240, 230);
                     textColor = Color.DarkCyan;
                     break;
+                case "resolvido pelo usuário (ia)":
+                case "resolvidopelousuario":
+                case "resolvido":
+                    backColor = Color.FromArgb(220, 237, 200);
+                    textColor = Color.FromArgb(51, 105, 30);
+                    break;
                 default:
                     backColor = Color.LightGray;
                     textColor = Color.Black;
@@ -121,9 +128,15 @@ namespace PayHelp.Desktop.WinForms
         {
             list ??= new List<ApiClient.RelatorioDto>();
             int total = list.Count;
-            int encerrados = list.Count(i => string.Equals(i.Status, "Encerrado", StringComparison.OrdinalIgnoreCase));
+            
+            // Resolvidos pela IA (conta tickets com ResolvidoPeloUsuario=true no DTO)
+            int resolvidosIA = list.Count(i => i.ResolvidoPeloUsuario == true);
+            
+            // Encerrados (conta apenas tickets que têm data de encerramento preenchida)
+            int encerrados = list.Count(i => i.EncerradoEmUtc.HasValue);
+            
             int emAtendimento = list.Count(i => string.Equals(i.Status, "EmAtendimento", StringComparison.OrdinalIgnoreCase) || string.Equals(i.Status, "Em Atendimento", StringComparison.OrdinalIgnoreCase));
-            int abertos = Math.Max(0, total - (encerrados + emAtendimento));
+            int abertos = list.Count(i => string.Equals(i.Status, "Aberto", StringComparison.OrdinalIgnoreCase));
 
             var duracoes = new List<TimeSpan>();
             foreach (var i in list)
@@ -132,7 +145,7 @@ namespace PayHelp.Desktop.WinForms
                     duracoes.Add(i.Duracao.Value);
             }
             double mediaHoras = duracoes.Count > 0 ? duracoes.Average(d => d.TotalHours) : 0.0;
-            double taxa = total > 0 ? (double)encerrados / total * 100.0 : 0.0;
+            double taxa = total > 0 ? (double)(encerrados + resolvidosIA) / total * 100.0 : 0.0;
 
             if (lblResumoTotal != null) lblResumoTotal.Text = $"Total: {total}";
             if (lblResumoEncerrados != null) lblResumoEncerrados.Text = $"Encerrados: {encerrados}";
@@ -140,6 +153,7 @@ namespace PayHelp.Desktop.WinForms
             if (lblResumoAbertos != null) lblResumoAbertos.Text = $"Abertos: {abertos}";
             if (lblResumoMedia != null) lblResumoMedia.Text = $"Tempo Médio: {mediaHoras:F1} h";
             if (lblResumoTaxa != null) lblResumoTaxa.Text = $"Taxa de Resolução: {taxa:F1}%";
+            if (lblResumoResolvidosIA != null) lblResumoResolvidosIA.Text = $"Resolvidos via IA: {resolvidosIA}";
         }
     }
 }

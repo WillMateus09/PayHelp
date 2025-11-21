@@ -1,46 +1,48 @@
 using Microsoft.Extensions.DependencyInjection;
-using PayHelp.Mobile.Maui.Utilities;
 using PayHelp.Mobile.Maui.ViewModels;
 
 namespace PayHelp.Mobile.Maui.Services;
 
 public static class ServicesConfig
 {
+    public const string BaseUrl = "http://192.168.15.107:5236/api/";
+
     public static void Configure(IServiceCollection services)
     {
-        services.AddTransient<AuthorizedHttpMessageHandler>();
-
+        // HttpClient configurado
         services.AddHttpClient("api", client =>
         {
-            var baseUrl = AppSettings.BaseApiUrl;
-            if (!baseUrl.EndsWith("/")) baseUrl += "/";
-            client.BaseAddress = new Uri(baseUrl);
+            client.BaseAddress = new Uri(BaseUrl);
             client.Timeout = TimeSpan.FromSeconds(30);
         })
-#if ANDROID
-        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            // Explicitly allow insecure (HTTP) for LAN dev; no custom cert validation
-            ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) => true
-        })
-#endif
+        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler())
         .AddHttpMessageHandler<AuthorizedHttpMessageHandler>();
 
+        // Handler precisa ser Transient
+        services.AddTransient<AuthorizedHttpMessageHandler>();
 
+        // Services
         services.AddSingleton<AuthService>();
         services.AddSingleton<ChamadoService>();
+        services.AddSingleton<FaqService>();
         services.AddSingleton<MensagemService>();
         services.AddSingleton<RelatorioService>();
         services.AddSingleton<TriagemService>();
-    services.AddSingleton<FaqService>();
 
-
+        // ViewModels
         services.AddTransient<LoginViewModel>();
         services.AddTransient<CadastroViewModel>();
-        services.AddTransient<ChamadosViewModel>();
-        services.AddTransient<AbrirChamadoViewModel>();
-    services.AddTransient<ChamadoDetalheViewModel>();
+        services.AddTransient<HomeViewModel>();
         services.AddTransient<DashboardViewModel>();
+        services.AddTransient<ChamadosViewModel>();
+        services.AddTransient<ChamadoDetalheViewModel>();
+        services.AddTransient<AbrirChamadoViewModel>();
         services.AddTransient<MensagensViewModel>();
+        services.AddTransient<FeedbacksViewModel>();
+        services.AddTransient<FeedbackListaViewModel>();
+        services.AddTransient<MarcarResolvidoViewModel>();
+        services.AddTransient<SettingsViewModel>();
+        services.AddTransient<AdminUsersViewModel>();
+        services.AddTransient<AdminSettingsViewModel>();
     }
 }

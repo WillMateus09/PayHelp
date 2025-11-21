@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PayHelp.Mobile.Maui.ViewModels"
+             x:Class="PayHelp.Mobile.Maui.Views.AdminSettingsPage"
+             Title="Configurações do Sistema">
+    
+    <ContentPage.BindingContext>
+        <vm:AdminSettingsViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+            
+            <!-- Header -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="⚙️ Configurações do Sistema"
+                       FontSize="24"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource Primary}" />
+                <Label Text="Configure parâmetros globais da aplicação"
+                       FontSize="14"
+                       TextColor="{StaticResource Gray600}" />
+            </VerticalStackLayout>
+
+            <!-- Card de Configurações -->
+            <Frame CornerRadius="12"
+                   BorderColor="{StaticResource Gray200}"
+                   HasShadow="False"
+                   Padding="20">
+                <VerticalStackLayout Spacing="20">
+
+                    <!-- Palavra de Verificação -->
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Palavra de Verificação do Suporte"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Gray900}" />
+                        <Entry Text="{Binding SupportVerificationWord}"
+                               Placeholder="Ex: SUP"
+                               FontSize="15"
+                               BackgroundColor="{StaticResource Gray100}"
+                               TextColor="{StaticResource Gray900}" />
+                        <Label Text="Usada no cadastro de usuários de Suporte"
+                               FontSize="12"
+                               TextColor="{StaticResource Gray600}" />
+                    </VerticalStackLayout>
+
+                    <!-- URL Pública -->
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="URL Pública do Servidor"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Gray900}" />
+                        <Entry Text="{Binding PublicBaseUrl}"
+                               Placeholder="http://192.168.15.107:5236"
+                               Keyboard="Url"
+                               FontSize="15"
+                               BackgroundColor="{StaticResource Gray100}"
+                               TextColor="{StaticResource Gray900}" />
+                        <Label Text="Ex: http://SEU_IP:5236 — usado pelos clientes Web/Desktop"
+                               FontSize="12"
+                               TextColor="{StaticResource Gray600}" />
+                    </VerticalStackLayout>
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Botões -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button Grid.Column="0"
+                        Text="💾 Salvar"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        CornerRadius="10"
+                        HeightRequest="50"
+                        Command="{Binding SaveSettingsCommand}" />
+
+                <Button Grid.Column="1"
+                        Text="🔄 Recarregar"
+                        BackgroundColor="{StaticResource Gray400}"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        CornerRadius="10"
+                        HeightRequest="50"
+                        Command="{Binding LoadSettingsCommand}" />
+            </Grid>
+
+            <!-- Mensagem de Status -->
+            <Label Text="{Binding StatusMessage}"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                   FontSize="14"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource Primary}"
+                   HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

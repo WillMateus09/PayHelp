@@ -17,6 +17,9 @@ public class AuthService
         try
         {
             var client = _factory.CreateClient("api");
+            System.Diagnostics.Debug.WriteLine($"[AuthService] BaseAddress: {client.BaseAddress}");
+            System.Diagnostics.Debug.WriteLine($"[AuthService] Tentando login em: {client.BaseAddress}auth/login");
+            
             var res = await client.PostAsJsonAsync("auth/login", request, ct);
             if (res.IsSuccessStatusCode)
             {

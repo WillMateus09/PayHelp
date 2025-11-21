@@ -5,7 +5,7 @@ namespace PayHelp.Mobile.Maui.Utilities;
 public static class AppSettings
 {
 
-    public static string BaseApiUrl { get; set; } = "http://192.168.15.109:5236/api/";
+    public static string BaseApiUrl { get; set; } = "http://192.168.15.107:5236/api/";
 
     public const string TokenKey = "auth_token";
     public const string UserIdKey = "user_id";
@@ -37,4 +37,10 @@ public static class AppSettings
     public static Task<string?> GetUserNameAsync() => SecureStorage.Default.GetAsync(UserNameKey);
     public static Task<string?> GetUserEmailAsync() => SecureStorage.Default.GetAsync(UserEmailKey);
     public static Task<string?> GetUserRoleAsync() => SecureStorage.Default.GetAsync(UserRoleKey);
+    
+    public static void SetBaseApiUrl(string url)
+    {
+        if (!string.IsNullOrWhiteSpace(url))
+            BaseApiUrl = url.TrimEnd('/') + "/";
+    }
 }

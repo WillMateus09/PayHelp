@@ -1,0 +1,33 @@
+@model IEnumerable<PayHelp.Application.DTOs.UserFeedbackSummaryDto>
+@{
+    ViewData["Title"] = "Resumo de Feedback por Suporte";
+}
+<h2>@ViewData["Title"]</h2>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Suporte</th>
+      <th>Total Feedbacks</th>
+      <th>Média Geral</th>
+      <th>Tickets Resolvidos pelo Usuário</th>
+      <th>Tickets Resolvidos pelo Suporte</th>
+      <th>Média (Suporte)</th>
+      <th>Média (Usuário)</th>
+    </tr>
+  </thead>
+  <tbody>
+  @foreach (var r in Model)
+  {
+      <tr>
+        <td>@r.NomeUsuarioSuporte (@r.UsuarioSuporteId)</td>
+        <td>@r.TotalFeedbacks</td>
+        <td>@r.MediaNotas.ToString("0.00")</td>
+        <td>@r.TicketsResolvidosPeloUsuario</td>
+        <td>@r.TicketsResolvidosPeloSuporte</td>
+        <td>@r.MediaNotasTicketsResolvidosPeloSuporte.ToString("0.00")</td>
+        <td>@r.MediaNotasTicketsResolvidosPeloUsuario.ToString("0.00")</td>
+      </tr>
+  }
+  </tbody>
+  </table>

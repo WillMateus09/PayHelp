@@ -12,7 +12,8 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _auth;
     private readonly IJwtTokenService _jwt;
-    public AuthController(IAuthService auth, IJwtTokenService jwt){ _auth = auth; _jwt = jwt; }
+    private readonly Application.Abstractions.ISystemSettingsRepository _settings;
+    public AuthController(IAuthService auth, IJwtTokenService jwt, Application.Abstractions.ISystemSettingsRepository settings){ _auth = auth; _jwt = jwt; _settings = settings; }
 
     public record RegisterSimplesRequest(string NumeroInscricao, string Nome, string Email, string Senha);
     public record RegisterSuporteRequest(string NumeroInscricao, string Nome, string Email, string Senha, string PalavraVerificacao);
@@ -39,6 +40,10 @@ public class AuthController : ControllerBase
     {
         try
         {
+            var expected = (await _settings.GetAsync("SupportVerificationWord"))?.Value ?? "SUP";
+            if (!string.Equals(req.PalavraVerificacao, expected, StringComparison.OrdinalIgnoreCase))
+                return Problem("Palavra de verificação inválida.", statusCode: 400);
+
             var u = await _auth.RegistrarUsuarioSuporteAsync(req.NumeroInscricao, req.Nome, req.Email, req.Senha, req.PalavraVerificacao);
             var (token, exp) = _jwt.CreateToken(u);
             return Ok(new AuthResponse(u.Id, u.Nome, u.Email, u.Role.ToString(), token, exp));

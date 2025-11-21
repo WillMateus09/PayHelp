@@ -1,3 +1,4 @@
+using System;
 using System.Windows.Forms;
 namespace PayHelp.Desktop.WinForms;
 
@@ -5,6 +6,7 @@ public class FrmAbrirChamadoWizard : Form
 {
     private readonly ApiClient _api;
     private readonly SessionContext _session;
+    private readonly IServiceProvider _serviceProvider;
 
     private readonly Label _lblStep = new Label { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(12, 8, 12, 8) };
     private readonly Panel _content = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12) };
@@ -20,10 +22,11 @@ public class FrmAbrirChamadoWizard : Form
     private Guid? _createdTicketId;
     private bool _creating;
 
-    public FrmAbrirChamadoWizard(ApiClient api, SessionContext session)
+    public FrmAbrirChamadoWizard(ApiClient api, SessionContext session, IServiceProvider serviceProvider)
     {
         _api = api;
         _session = session;
+        _serviceProvider = serviceProvider;
 
         Text = "Abrir Chamado";
         StartPosition = FormStartPosition.CenterParent;
@@ -168,9 +171,12 @@ public class FrmAbrirChamadoWizard : Form
 
         try
         {
-            var chat = new FrmChatChamado(_api, _session);
-            chat.SetTicket(_createdTicketId.Value);
-            chat.Show();
+            var chat = _serviceProvider.GetService(typeof(FrmChatChamado)) as FrmChatChamado;
+            if (chat != null)
+            {
+                chat.SetTicket(_createdTicketId.Value);
+                chat.Show();
+            }
         }
         catch { }
 
@@ -183,9 +189,12 @@ public class FrmAbrirChamadoWizard : Form
     {
         if (_btnChamarAtendente.Tag is Guid ticketId)
         {
-            var chat = new FrmChatChamado(_api, _session);
-            chat.SetTicket(ticketId);
-            chat.Show(this);
+            var chat = _serviceProvider.GetService(typeof(FrmChatChamado)) as FrmChatChamado;
+            if (chat != null)
+            {
+                chat.SetTicket(ticketId);
+                chat.Show();
+            }
         }
     }
 }

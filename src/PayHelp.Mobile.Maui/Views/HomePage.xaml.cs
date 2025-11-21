@@ -26,7 +26,15 @@ public partial class HomePage : ContentPage
         }
         else if (sender is Frame frame && frame.GestureRecognizers.FirstOrDefault() is TapGestureRecognizer tap && tap.CommandParameter is string frRoute && !string.IsNullOrWhiteSpace(frRoute))
         {
-            await Shell.Current.GoToAsync($"//{frRoute}");
+            // Para rotas registradas (como feedback-lista), usar navegação relativa
+            if (frRoute == "feedback-lista")
+            {
+                await Shell.Current.GoToAsync(frRoute);
+            }
+            else
+            {
+                await Shell.Current.GoToAsync($"//{frRoute}");
+            }
         }
     }
 }

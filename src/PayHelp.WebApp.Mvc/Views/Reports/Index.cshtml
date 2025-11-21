@@ -6,6 +6,7 @@
     int total = result.Count;
     int encerrados = result.Count(r => r.StatusFinal == TicketStatus.Encerrado);
     int emAtendimento = result.Count(r => r.StatusFinal == TicketStatus.EmAtendimento);
+    int resolvidosUsuario = result.Count(r => r.ResolvidoPeloUsuario);
     // Deriva "Abertos" do total menos (encerrados + em atendimento) para evitar qualquer divergência de enum/parsing
     int abertos = Math.Max(0, total - (encerrados + emAtendimento));
 }
@@ -86,8 +87,10 @@
 {
     var encerradosComDuracao = result.Where(r => r.StatusFinal == TicketStatus.Encerrado && r.Duracao.HasValue).ToList();
     TimeSpan? mediaDuracao = encerradosComDuracao.Any() ? TimeSpan.FromSeconds(encerradosComDuracao.Average(r => r.Duracao!.Value.TotalSeconds)) : null;
+    // Agrupa somente usuários com email válido para evitar linha 'desconhecido' vazia
     var porUsuario = result
-        .GroupBy(r => r.SolicitanteEmail ?? "(desconhecido)")
+        .Where(r => !string.IsNullOrWhiteSpace(r.SolicitanteEmail))
+        .GroupBy(r => r.SolicitanteEmail!)
         .Select(g => new { Email = g.Key, Total = g.Count(), Encerrados = g.Count(x => x.StatusFinal == TicketStatus.Encerrado) })
         .OrderByDescending(x => x.Total)
         .Take(10)
@@ -115,6 +118,19 @@
                     <div class="stats-label">Encerrados</div>
                     <div class="stats-value">@encerrados</div>
                     <div class="stats-percentage">@(total > 0 ? Math.Round((double)encerrados / total * 100, 1) : 0)%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card-modern stats-info">
+                <div class="stats-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-label">Resolvido pelo Usuário</div>
+                    <div class="stats-value">@resolvidosUsuario</div>
+                    <div class="stats-percentage">@(total > 0 ? Math.Round((double)resolvidosUsuario / total * 100, 1) : 0)%</div>
+                    <div class="text-muted small mt-1"><i class="fas fa-robot me-1"></i> Resolvido pela IA (autoatendimento)</div>
                 </div>
             </div>
         </div>
@@ -241,6 +257,7 @@
                             <th><i class="fas fa-info-circle me-1"></i> Status</th>
                             <th><i class="fas fa-calendar-plus me-1"></i> Criado Em</th>
                             <th><i class="fas fa-calendar-check me-1"></i> Encerrado Em</th>
+                            <th><i class="fas fa-microchip me-1"></i> Origem</th>
                             <th><i class="fas fa-stopwatch me-1"></i> Duração</th>
                         </tr>
                     </thead>
@@ -268,6 +285,20 @@
                             </td>
                             <td>@r.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
                             <td>@(r.EncerradoEm?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                            <td>
+                                @if (r.ResolvidoPeloUsuario)
+                                {
+                                    <span class="badge bg-info"><i class="fas fa-robot me-1"></i> IA</span>
+                                }
+                                else if (r.StatusFinal == TicketStatus.Encerrado)
+                                {
+                                    <span class="badge bg-success"><i class="fas fa-user-headset me-1"></i> Atendente</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
                             <td>
                                 @if (r.Duracao.HasValue)
                                 {

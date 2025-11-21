@@ -1,0 +1,74 @@
+@model List<PayHelp.WebApp.Mvc.ViewModels.AdminUserViewModel>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header-modern mb-4">
+    <h1 class="page-title-modern"><i class="fas fa-users me-2"></i> Usuários</h1>
+    <p class="page-subtitle-modern">Gerencie bloqueio e redefinição de senha</p>
+</div>
+
+@if (TempData["Sucesso"] != null)
+{
+    <div class="alert alert-success">@TempData["Sucesso"]</div>
+}
+@if (TempData["Erro"] != null)
+{
+    <div class="alert alert-danger">@TempData["Erro"]</div>
+}
+
+<div class="card card-modern">
+    <div class="card-body table-responsive">
+        <table class="table table-modern align-middle">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Perfil</th>
+                    <th>Status</th>
+                    <th class="text-center" style="width: 320px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr>
+                        <td>@u.Nome</td>
+                        <td>@u.Email</td>
+                        <td>@u.Role</td>
+                        <td>
+                            @if (u.IsBlocked)
+                            {
+                                <span class="badge bg-danger">Bloqueado</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Ativo</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-2 justify-content-center">
+                                <form method="post" action="@Url.Action("Block","Admin", new { id = u.Id, blocked = !u.IsBlocked })" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn btn-sm @(u.IsBlocked ? "btn-success" : "btn-warning")">
+                                        <i class="fas @(u.IsBlocked ? "fa-unlock" : "fa-ban") me-1"></i>
+                                        @(u.IsBlocked ? "Desbloquear" : "Bloquear")
+                                    </button>
+                                </form>
+                                <form method="post" action="@Url.Action("SetPassword","Admin", new { id = u.Id })" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <div class="input-group input-group-sm" style="max-width: 320px;">
+                                        <input type="text" name="newPassword" class="form-control" placeholder="Nova senha" required />
+                                        <button class="btn btn-primary">
+                                            <i class="fas fa-key me-1"></i> Definir
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

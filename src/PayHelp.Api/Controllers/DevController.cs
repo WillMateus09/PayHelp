@@ -40,12 +40,34 @@ public class DevController : ControllerBase
         return Ok(list);
     }
 
+    [HttpGet("test-feedbacks")]
+    public async Task<ActionResult> TestFeedbacks()
+    {
+        if (!_env.IsDevelopment()) return DevOnly();
+        
+        var totalUsers = await _db.Users.CountAsync();
+        var allUsers = await _db.Users.Take(10).Select(u => new { u.Id, u.Nome, u.Email }).ToListAsync();
+        
+        var ticketsComFeedback = await _db.Tickets
+            .Where(t => t.ResolvidoPeloUsuario && t.NotaUsuario.HasValue)
+            .Select(t => new { t.Id, t.UserId, t.NotaUsuario, t.FeedbackUsuario })
+            .ToListAsync();
+        
+        return Ok(new
+        {
+            TotalUsuarios = totalUsers,
+            PrimeirosUsuarios = allUsers,
+            TicketsComFeedback = ticketsComFeedback
+        });
+    }
+
     [HttpPost("reset-db")] 
     public async Task<ActionResult> ResetDb()
     {
         if (!_env.IsDevelopment()) return DevOnly();
         await _db.Database.EnsureDeletedAsync();
-        await _db.Database.MigrateAsync();
+        // In Development with SQLite we prefer EnsureCreated to reflect the current model
+        await _db.Database.EnsureCreatedAsync();
         if (!await _db.Users.AnyAsync())
         {
             _db.Users.Add(new User

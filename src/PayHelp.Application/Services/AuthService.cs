@@ -35,11 +35,6 @@ public class AuthService : IAuthService
 
     public async Task<User> RegistrarUsuarioSuporteAsync(string numero, string nome, string email, string senha, string palavraVerificacao)
     {
-        if (!string.Equals(palavraVerificacao, "SUP", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("Palavra de verificação inválida.");
-        }
-
         await EnsureEmailDisponivelAsync(email);
         var user = new User
         {
@@ -58,6 +53,7 @@ public class AuthService : IAuthService
     {
         var user = await _users.GetByEmailAsync(email);
         if (user is null) return null;
+        if (user.IsBlocked) return null;
         var ok = HashStub.Verify(senha, user.SenhaHash);
         if (!ok)
         {
@@ -72,6 +68,15 @@ public class AuthService : IAuthService
         }
         _logger.LogInformation("Login {Result} para {Email}", ok ? "sucesso" : "falhou", email);
         return ok ? user : null;
+    }
+
+    public async Task<bool> SetPasswordAsync(Guid userId, string novaSenha)
+    {
+        var user = await _users.GetByIdAsync(userId);
+        if (user == null) return false;
+        user.SenhaHash = HashStub.Hash(novaSenha);
+        await _users.UpdateAsync(user);
+        return true;
     }
 
     private static bool IsSha256Hex(string? s)

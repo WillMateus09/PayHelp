@@ -14,6 +14,8 @@ public class AppDbContext : DbContext
     public DbSet<CannedMessage> CannedMessages => Set<CannedMessage>();
     public DbSet<FaqEntry> FaqEntries => Set<FaqEntry>();
     public DbSet<ReportEntry> Reports => Set<ReportEntry>();
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+    public DbSet<TicketFeedback> TicketFeedbacks => Set<TicketFeedback>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,6 +60,7 @@ public class AppDbContext : DbContext
             e.HasIndex(u => u.Email).IsUnique();
             e.Property(u => u.Email).HasMaxLength(200);
             e.Property(u => u.Nome).HasMaxLength(200);
+            e.Property(u => u.IsBlocked).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<CannedMessage>(e =>
@@ -90,6 +93,32 @@ public class AppDbContext : DbContext
                 .WithOne()
                 .HasForeignKey<ReportEntry>(r => r.TicketId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TicketFeedback>(e =>
+        {
+            e.HasKey(f => f.Id);
+            e.Property(f => f.Comentario).HasMaxLength(1000);
+            e.Property(f => f.Nota);
+            e.Property(f => f.DataCriacaoUtc);
+
+            e.HasOne<Ticket>()
+                .WithMany()
+                .HasForeignKey(f => f.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(f => f.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SystemSetting>(e =>
+        {
+            e.HasKey(s => s.Id);
+            e.HasIndex(s => s.Key).IsUnique();
+            e.Property(s => s.Key).HasMaxLength(100);
+            e.Property(s => s.Value).HasMaxLength(2000);
         });
     }
 }

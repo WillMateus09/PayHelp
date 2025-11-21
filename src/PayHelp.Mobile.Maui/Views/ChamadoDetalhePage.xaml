@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:PayHelp.Mobile.Maui.Converters"
              x:Class="PayHelp.Mobile.Maui.Views.ChamadoDetalhePage"
              x:Name="DetalheRoot"
              Title="Detalhes do Chamado">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToOpacityConverter x:Key="BoolToOpacityConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto" Padding="20" RowSpacing="12">
         
         <!-- Ações de Suporte -->
@@ -50,12 +56,24 @@
                        TextColor="{StaticResource Info}"/>
                 <Label Text="Aperte 'Triagem' para buscar soluções registradas; depois você poderá chamar um atendente." 
                        Style="{StaticResource Body}"/>
-                <Button Text="Iniciar Triagem" 
-                        Style="{StaticResource SmallButton}"
-                        Command="{Binding ExecutarTriagemCommand}"
-                        HorizontalOptions="Start"
-                        Padding="16,0"
-                        HeightRequest="40"/>
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="Iniciar Triagem" 
+                            Style="{StaticResource SmallButton}"
+                            Command="{Binding ExecutarTriagemCommand}"
+                            HorizontalOptions="Start"
+                            Padding="16,0"
+                            HeightRequest="40"/>
+                    <!-- Botão Resolvido ao lado da Triagem -->
+                    <Button Text="✅ Resolvido"
+                            Style="{StaticResource SuccessButton}"
+                            Command="{Binding ResolverPeloUsuarioCommand}"
+                            IsVisible="{Binding MostrarBotaoResolvidoUsuario}"
+                            IsEnabled="{Binding BotaoResolvidoHabilitado}"
+                            Opacity="{Binding BotaoResolvidoHabilitado, Converter={StaticResource BoolToOpacityConverter}}"
+                            HorizontalOptions="Start"
+                            Padding="16,0"
+                            HeightRequest="40"/>
+                </HorizontalStackLayout>
             </VerticalStackLayout>
         </Frame>
 
@@ -96,7 +114,7 @@
 
         <!-- Resolução Final -->
         <Frame Grid.Row="4" 
-               IsVisible="{Binding Ticket.ResolucaoFinal}"
+               IsVisible="{Binding MostrarResolucaoFinal}"
                Style="{StaticResource SuccessCard}">
             <VerticalStackLayout Spacing="8">
                 <Label Text="✅ Resolução Final" 
@@ -107,6 +125,16 @@
                        Style="{StaticResource Body}"/>
             </VerticalStackLayout>
         </Frame>
+        
+        <!-- Botão Marcar como Resolvido (apenas para usuário quando encerrado e ainda não avaliado) -->
+        <Button Grid.Row="4"
+                Text="⭐ Avaliar Atendimento"
+                Style="{StaticResource PrimaryButton}"
+                Command="{Binding MarcarResolvidoCommand}"
+                IsVisible="{Binding MostrarBotaoMarcarResolvido}"
+                Margin="0,8,0,0"
+                HorizontalOptions="Fill"
+                HeightRequest="50"/>
 
         <!-- Espaçador -->
         <BoxView Grid.Row="5" 

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.MasterHomePage"
+             x:Name="PageRef"
+             Title="Início">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="24">
+            
+         <!-- Hero Section -->
+         <Border Style="{StaticResource HeroCard}">
+          <VerticalStackLayout Spacing="12">
+              <Label Text="PayHelp" 
+                  Style="{StaticResource H1}" 
+                  TextColor="White"/>
+              <Label Text="Bem-vindo! Como podemos ajudar?" 
+                  Style="{StaticResource Subtitle}" 
+                  TextColor="#E0E7FF"/>
+              <Grid ColumnDefinitions="*,Auto" Padding="0,4,0,0">
+               <VerticalStackLayout Grid.Column="0">
+                   <Label Text="{Binding DisplayUser}"
+                       TextColor="#E0E7FF"
+                       Style="{StaticResource Caption}"/>
+                   <Label Text="Master Admin (Master)"
+                       TextColor="#FFD700"
+                       FontAttributes="Bold"
+                       Style="{StaticResource Caption}"/>
+               </VerticalStackLayout>
+               <Button Grid.Column="1"
+                    Text="Sair"
+                    Style="{StaticResource HeroGhostButton}"
+                    Command="{Binding LogoutCommand}" />
+              </Grid>
+          </VerticalStackLayout>
+         </Border>
+
+            <!-- Quick Actions Section -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Acesso Rápido" Style="{StaticResource H4}" />
+                
+                <!-- Gerenciar Usuários Card -->
+                <Frame Style="{StaticResource Card}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAdminUsersClicked" />
+                    </Frame.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="16">
+                        <Border BackgroundColor="{StaticResource Primary}"
+                                StrokeThickness="0"
+                                WidthRequest="56"
+                                HeightRequest="56">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Label Text="👥" 
+                                   FontSize="28"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"/>
+                        </Border>
+                        <VerticalStackLayout VerticalOptions="Center" Spacing="4">
+                            <Label Text="Gerenciar Usuários" 
+                                   Style="{StaticResource Body}"
+                                   FontAttributes="Bold"/>
+                            <Label Text="Bloqueie usuários ou redefina senhas" 
+                                   Style="{StaticResource Caption}"/>
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </Frame>
+
+                <!-- Configurações Card -->
+                <Frame Style="{StaticResource Card}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAdminSettingsClicked" />
+                    </Frame.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="16">
+                        <Border BackgroundColor="#6c757d"
+                                StrokeThickness="0"
+                                WidthRequest="56"
+                                HeightRequest="56">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Label Text="⚙️" 
+                                   FontSize="28"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"/>
+                        </Border>
+                        <VerticalStackLayout VerticalOptions="Center" Spacing="4">
+                            <Label Text="Configurações" 
+                                   Style="{StaticResource Body}"
+                                   FontAttributes="Bold"/>
+                            <Label Text="Configure parâmetros do sistema" 
+                                   Style="{StaticResource Caption}"/>
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+
+            <!-- Dicas Úteis -->
+            <Frame Style="{StaticResource InfoCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Dicas Úteis" 
+                           Style="{StaticResource Body}"
+                           FontAttributes="Bold"/>
+                    
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="•" Style="{StaticResource Body}"/>
+                            <Label Text="Descreva seu problema com o máximo de detalhes" 
+                                   Style="{StaticResource Body}"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,215 @@
+@model PayHelp.WebApp.Mvc.Models.MarcarResolvidoViewModel
+
+@{
+    ViewData["Title"] = "Marcar como Resolvido";
+}
+
+<style>
+    .star-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 0.5rem;
+    }
+    .star-btn:hover {
+        transform: scale(1.2);
+    }
+    .star-btn:focus {
+        outline: none;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">✅ Seu problema foi resolvido?</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted text-center mb-4">
+                        Conte se a IA conseguiu te ajudar, se tem algo que poderia melhorar ou se o atendimento foi rápido. 
+                        Seu feedback é muito importante!
+                    </p>
+
+                    <!-- Mensagens de erro -->
+                    <div asp-validation-summary="All" class="alert alert-danger" style="display:none;"></div>
+                    
+                    @if (ViewData.ModelState.ErrorCount > 0)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>❌ Erro ao enviar feedback:</strong>
+                            <ul class="mb-0 mt-2">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="MarcarResolvido" method="post" id="formResolvido">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="TicketId" />
+                        <input type="hidden" asp-for="NotaUsuario" id="hdnNota" />
+
+                        <!-- Avaliação por Estrelas -->
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold">Avalie sua experiência:</label>
+                            <div class="d-flex justify-content-center my-3" id="rating-stars">
+                                <button type="button" class="btn btn-link star-btn" data-nota="1" style="font-size: 2.5rem; color: gray;">☆</button>
+                                <button type="button" class="btn btn-link star-btn" data-nota="2" style="font-size: 2.5rem; color: gray;">☆</button>
+                                <button type="button" class="btn btn-link star-btn" data-nota="3" style="font-size: 2.5rem; color: gray;">☆</button>
+                                <button type="button" class="btn btn-link star-btn" data-nota="4" style="font-size: 2.5rem; color: gray;">☆</button>
+                                <button type="button" class="btn btn-link star-btn" data-nota="5" style="font-size: 2.5rem; color: gray;">☆</button>
+                            </div>
+                            <span asp-validation-for="NotaUsuario" class="text-danger"></span>
+                        </div>
+
+                        <!-- Campo de Feedback -->
+                        <div class="form-group mb-4">
+                            <label asp-for="FeedbackUsuario" class="font-weight-bold">Seu comentário:</label>
+                            <textarea asp-for="FeedbackUsuario" 
+                                      class="form-control" 
+                                      rows="5" 
+                                      maxlength="2000"
+                                      placeholder="Digite aqui seu feedback sobre o atendimento..."></textarea>
+                            <span asp-validation-for="FeedbackUsuario" class="text-danger"></span>
+                            <small class="form-text text-muted">Máximo de 2000 caracteres</small>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Minhas" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Confirmar Feedback
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function() {
+            'use strict';
+            
+            let notaSelecionada = 0;
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                const hdnNota = document.getElementById('hdnNota');
+                const starButtons = document.querySelectorAll('.star-btn');
+                const ratingStars = document.getElementById('rating-stars');
+                const formResolvido = document.getElementById('formResolvido');
+                
+                if (!formResolvido) {
+                    console.error('ERRO: Formulário não encontrado!');
+                    return;
+                }
+                
+                console.log('✓ Script carregado. Formulário encontrado:', formResolvido);
+                console.log('✓ Estrelas encontradas:', starButtons.length);
+
+                // Manipulação das estrelas - Click
+                starButtons.forEach(function(btn, index) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        notaSelecionada = parseInt(this.getAttribute('data-nota'), 10);
+                        hdnNota.value = notaSelecionada;
+                        
+                        console.log('★ Estrela ' + notaSelecionada + ' clicada');
+                        console.log('★ Campo hidden atualizado para:', hdnNota.value);
+                        
+                        atualizarEstrelas();
+                    });
+
+                    // Hover
+                    btn.addEventListener('mouseenter', function() {
+                        const nota = parseInt(this.getAttribute('data-nota'), 10);
+                        destacarEstrelas(nota);
+                    });
+                });
+
+                // MouseLeave do container
+                if (ratingStars) {
+                    ratingStars.addEventListener('mouseleave', function() {
+                        atualizarEstrelas();
+                    });
+                }
+
+                function destacarEstrelas(nota) {
+                    starButtons.forEach(function(btn, index) {
+                        if (index < nota) {
+                            btn.innerHTML = '★';
+                            btn.style.color = 'gold';
+                        } else {
+                            btn.innerHTML = '☆';
+                            btn.style.color = 'gray';
+                        }
+                    });
+                }
+
+                function atualizarEstrelas() {
+                    destacarEstrelas(notaSelecionada);
+                }
+
+                // Validação do formulário
+                formResolvido.addEventListener('submit', function(e) {
+                    console.log('\n=== TENTATIVA DE SUBMIT ===');
+                    console.log('Nota variável:', notaSelecionada);
+                    console.log('Campo hidden:', hdnNota.value);
+                    
+                    // Força atualização do campo
+                    hdnNota.value = notaSelecionada;
+                    console.log('Campo hidden ATUALIZADO:', hdnNota.value);
+                    
+                    // Validação da nota
+                    if (notaSelecionada === 0 || !notaSelecionada) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('⚠️ Por favor, selecione uma nota de 1 a 5 estrelas.');
+                        console.log('❌ BLOQUEADO: Nenhuma estrela selecionada');
+                        return false;
+                    }
+                    
+                    // Validação do feedback
+                    const feedbackField = document.querySelector('textarea[name="FeedbackUsuario"]');
+                    if (!feedbackField) {
+                        console.error('❌ Campo de feedback não encontrado!');
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    const feedback = feedbackField.value.trim();
+                    console.log('Feedback:', feedback.substring(0, 50) + '...');
+                    
+                    if (feedback === '' || feedback.length < 3) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('⚠️ Por favor, escreva um comentário sobre sua experiência (mínimo 3 caracteres).');
+                        console.log('❌ BLOQUEADO: Feedback vazio ou muito curto');
+                        return false;
+                    }
+                    
+                    console.log('✅ VALIDAÇÃO OK!');
+                    console.log('✅ Formulário será submetido agora...');
+                    console.log('Action:', formResolvido.action);
+                    console.log('Method:', formResolvido.method);
+                    
+                    // Deixa o formulário submeter
+                });
+                
+                console.log('✓ Listeners configurados com sucesso!');
+            });
+        })();
+    </script>
+}

@@ -9,6 +9,10 @@ public class ChatViewModel
     public TicketStatus Status { get; set; }
     public List<ChatMessageVM> Mensagens { get; set; } = new();
     public string? NovaMensagem { get; set; }
+    
+    // Feedback do usuário quando marcar como resolvido
+    public string? FeedbackUsuario { get; set; }
+    public int? NotaUsuario { get; set; }
 }
 
 public class ChatMessageVM

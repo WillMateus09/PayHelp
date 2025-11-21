@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PayHelp.Mobile.Maui.ViewModels"
+             x:Class="PayHelp.Mobile.Maui.Views.AdminUsersPage"
+             Title="Gerenciar Usuários"
+             x:Name="AdminUsersPageRoot">
+    
+    <ContentPage.BindingContext>
+        <vm:AdminUsersViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid RowDefinitions="Auto,*" Padding="16">
+        
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+            <Label Text="👥 Gerenciar Usuários"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource Primary}" />
+            <Label Text="Bloqueie usuários ou redefina suas senhas"
+                   FontSize="14"
+                   TextColor="{StaticResource Gray600}" />
+        </VerticalStackLayout>
+
+        <!-- Lista de Usuários -->
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsLoading}"
+                     Command="{Binding LoadUsersCommand}">
+            <CollectionView ItemsSource="{Binding Users}"
+                            SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center" 
+                                         VerticalOptions="Center"
+                                         Spacing="12">
+                        <Label Text="📭"
+                               FontSize="48"
+                               HorizontalOptions="Center" />
+                        <Label Text="Nenhum usuário encontrado"
+                               FontSize="16"
+                               TextColor="{StaticResource Gray600}"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="0,0,0,12"
+                               Padding="16"
+                               CornerRadius="12"
+                               BorderColor="{StaticResource Gray200}"
+                               HasShadow="False">
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+                                  ColumnDefinitions="*,Auto"
+                                  RowSpacing="8"
+                                  ColumnSpacing="12">
+
+                                <!-- Nome -->
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Nome}"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource Gray900}" />
+
+                                <!-- Badge de Status -->
+                                <Frame Grid.Row="0" Grid.Column="1"
+                                       Padding="8,4"
+                                       CornerRadius="12"
+                                       HasShadow="False"
+                                       BackgroundColor="{Binding IsBlocked, Converter={StaticResource BoolToStatusColorConverter}}">
+                                    <Label Text="{Binding IsBlocked, Converter={StaticResource BoolToStatusTextConverter}}"
+                                           FontSize="12"
+                                           FontAttributes="Bold"
+                                           TextColor="White" />
+                                </Frame>
+
+                                <!-- Email -->
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding Email}"
+                                       FontSize="14"
+                                       TextColor="{StaticResource Gray600}" />
+
+                                <!-- Role -->
+                                <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                                       Spacing="4">
+                                    <Label Text="Perfil:"
+                                           FontSize="13"
+                                           FontAttributes="Bold"
+                                           TextColor="{StaticResource Gray700}" />
+                                    <Label Text="{Binding Role}"
+                                           FontSize="13"
+                                           TextColor="{StaticResource Primary}" />
+                                </HorizontalStackLayout>
+
+                                <!-- Botões de Ação -->
+                                <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                                      ColumnDefinitions="*,*"
+                                      ColumnSpacing="8"
+                                      Margin="0,8,0,0">
+
+                                    <!-- Botão Bloquear/Desbloquear -->
+                                    <Button Grid.Column="0"
+                                            Text="{Binding IsBlocked, Converter={StaticResource BoolToBlockButtonTextConverter}}"
+                                            BackgroundColor="{Binding IsBlocked, Converter={StaticResource BoolToBlockButtonColorConverter}}"
+                                            TextColor="White"
+                                            FontSize="13"
+                                            CornerRadius="8"
+                                            Command="{Binding Source={x:Reference AdminUsersPageRoot}, Path=BindingContext.ToggleBlockCommand}"
+                                            CommandParameter="{Binding .}" />
+
+                                    <!-- Botão Redefinir Senha -->
+                                    <Button Grid.Column="1"
+                                            Text="🔑 Senha"
+                                            BackgroundColor="{StaticResource Primary}"
+                                            TextColor="White"
+                                            FontSize="13"
+                                            CornerRadius="8"
+                                            Command="{Binding Source={x:Reference AdminUsersPageRoot}, Path=BindingContext.ResetPasswordCommand}"
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+    </Grid>
+</ContentPage>

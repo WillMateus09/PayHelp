@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
@@ -8,11 +9,13 @@ public partial class FrmPainelSuporte : Form
 {
     private readonly ApiClient _api;
     private readonly SessionContext _session;
+    private readonly IServiceProvider _serviceProvider;
 
-    public FrmPainelSuporte(ApiClient api, SessionContext session)
+    public FrmPainelSuporte(ApiClient api, SessionContext session, IServiceProvider serviceProvider)
     {
         _api = api;
         _session = session;
+        _serviceProvider = serviceProvider;
         InitializeComponent();
         Theme.Apply(this);
         TicketStatus.Bind(cmbStatus);
@@ -44,7 +47,10 @@ public partial class FrmPainelSuporte : Form
     btnAssumir.Tag = "primary";
 
     btnEmAtendimento.Visible = false;
-    btnEncerrar.Visible = false;
+    btnEncerrar.Visible = true;
+    btnEncerrar.Tag = "danger";
+    btnVerFeedback.Tag = "secondary";
+    btnTodosFeedbacks.Tag = "secondary";
         dgvTickets.SelectionChanged += (_, __) => UpdateButtonsState();
     }
 
@@ -126,9 +132,14 @@ public partial class FrmPainelSuporte : Form
 
         try
         {
-            var chat = new FrmChatChamado(_api, _session);
-            chat.SetTicket(sel.Id);
-            chat.Show();
+            var chat = _serviceProvider.GetService(typeof(FrmChatChamado)) as FrmChatChamado;
+            if (chat != null)
+            {
+                chat.SetTicket(sel.Id);
+                chat.ShowDialog();
+                await CarregarAsync();
+                UpdateButtonsState();
+            }
         }
         catch { }
     }
@@ -145,26 +156,48 @@ public partial class FrmPainelSuporte : Form
 
     private async void btnEncerrar_Click(object sender, EventArgs e)
     {
-        var sel = Selecionado(); if (sel is null) { UpdateButtonsState(); return; }
-        var confirm = MessageBox.Show("Encerrar o chamado selecionado?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        var sel = Selecionado(); 
+        if (sel is null) { UpdateButtonsState(); return; }
+        
+        var isResolvidoPeloUsuario = string.Equals(sel.Status, "Resolvido pelo Usuário (IA)", StringComparison.OrdinalIgnoreCase) ||
+                                     string.Equals(sel.Status, "ResolvidoPeloUsuario", StringComparison.OrdinalIgnoreCase);
+        
+        var mensagemConfirmacao = isResolvidoPeloUsuario 
+            ? "Deseja encerrar definitivamente este chamado?\n\nO status 'Resolvido pela IA' será mantido para relatórios."
+            : "Encerrar o chamado selecionado?";
+        
+        var confirm = MessageBox.Show(mensagemConfirmacao, "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
         if (confirm != DialogResult.Yes) return;
+        
         using var _ = LoadingOverlay.Show(this, "Encerrando chamado...");
         await _api.EncerrarChamadoAsync(sel.Id);
 
-        var registrar = MessageBox.Show("Deseja registrar a resolução final na FAQ?", "Resolução Final", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-        if (registrar == DialogResult.Yes)
+        // Só pede resolução final se NÃO foi resolvido pela IA
+        if (!isResolvidoPeloUsuario)
         {
-            using var modal = new PromptDialog("Informe a resolução final:");
-            if (modal.ShowDialog(this) == DialogResult.OK)
+            var registrar = MessageBox.Show("Deseja registrar a resolução final na FAQ?", "Resolução Final", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (registrar == DialogResult.Yes)
             {
-                var texto = modal.ResultText?.Trim();
-                if (!string.IsNullOrWhiteSpace(texto))
+                using var modal = new PromptDialog("Informe a resolução final:");
+                if (modal.ShowDialog(this) == DialogResult.OK)
                 {
-                    try { await _api.RegistrarResolucaoFinalAsync(sel.Id, texto); }
-                    catch {  }
+                    var texto = modal.ResultText?.Trim();
+                    if (!string.IsNullOrWhiteSpace(texto))
+                    {
+                        try { await _api.RegistrarResolucaoFinalAsync(sel.Id, texto); }
+                        catch {  }
+                    }
                 }
             }
         }
+        
+        MessageBox.Show(
+            "Chamado encerrado com sucesso!",
+            "Encerramento",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information
+        );
+        
         await CarregarAsync();
         UpdateButtonsState();
     }
@@ -176,19 +209,92 @@ public partial class FrmPainelSuporte : Form
         var canAct = _session.IsAuthenticated && _session.IsSupport;
         var status = sel?.Status ?? string.Empty;
         var isEncerrado = string.Equals(status, TicketStatus.Encerrado, StringComparison.OrdinalIgnoreCase);
-        btnAssumir.Enabled = hasSel && canAct && !isEncerrado;
+        var isResolvidoPeloUsuario = string.Equals(status, "Resolvido pelo Usuário (IA)", StringComparison.OrdinalIgnoreCase) ||
+                                     string.Equals(status, "ResolvidoPeloUsuario", StringComparison.OrdinalIgnoreCase);
+        
+        // Ticket tem feedback se foi resolvido pelo usuário (independente de estar encerrado ou não)
+        var temFeedback = sel?.ResolvidoPeloUsuario == true;
+
+        btnAssumir.Enabled = hasSel && canAct && !isEncerrado && !isResolvidoPeloUsuario;
+        btnVerFeedback.Visible = temFeedback;
+        btnVerFeedback.Enabled = hasSel && temFeedback;
+        btnEncerrar.Enabled = hasSel && canAct && !isEncerrado;
     }
 
-    private void DgvTickets_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+    private async void BtnVerFeedback_Click(object? sender, EventArgs e)
+    {
+        var sel = Selecionado();
+        if (sel is null) return;
+
+        try
+        {
+            using var loading = LoadingOverlay.Show(this, "Carregando feedback...");
+            var feedback = await _api.ObterFeedbackAsync(sel.Id);
+
+            if (feedback is null)
+            {
+                MessageBox.Show(
+                    "Nenhum feedback encontrado para este chamado.",
+                    "Feedback",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+                return;
+            }
+
+            // Debug: verificar dados do feedback
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] Feedback recebido: Nota={feedback.Nota}, Comentario='{feedback.Comentario}', Id={feedback.Id}");
+
+            using var form = new FrmVisualizarFeedback(feedback);
+            form.ShowDialog(this);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Erro ao carregar feedback: {ex.Message}",
+                "Erro",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error
+            );
+        }
+    }
+
+    private void BtnTodosFeedbacks_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            var form = _serviceProvider.GetService(typeof(FrmListaFeedbacks)) as FrmListaFeedbacks;
+            if (form != null)
+            {
+                form.ShowDialog(this);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Erro ao abrir lista de feedbacks: {ex.Message}",
+                "Erro",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error
+            );
+        }
+    }
+
+    private async void DgvTickets_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0) return;
         var sel = Selecionado();
         if (sel is null) return;
         try
         {
-            var chat = new FrmChatChamado(_api, _session);
-            chat.SetTicket(sel.Id);
-            chat.Show();
+            var chat = _serviceProvider.GetService(typeof(FrmChatChamado)) as FrmChatChamado;
+            if (chat != null)
+            {
+                chat.SetTicket(sel.Id);
+                chat.ShowDialog();
+                await CarregarAsync();
+                UpdateButtonsState();
+            }
         }
         catch { }
     }
@@ -213,6 +319,9 @@ public partial class FrmPainelSuporte : Form
         if (string.IsNullOrEmpty(text))
             return;
 
+        // Verifica se o ticket foi resolvido pelo usuário
+        var ticket = grid.Rows[e.RowIndex].DataBoundItem as ApiClient.TicketDto;
+        var resolvidoPeloUsuario = ticket?.ResolvidoPeloUsuario == true;
 
         Color backColor;
         Color textColor = Color.White;
@@ -222,6 +331,13 @@ public partial class FrmPainelSuporte : Form
             case "encerrado":
                 backColor = Color.FromArgb(255, 210, 210);
                 textColor = Color.DarkRed;
+                // Se foi resolvido pelo usuário, mostra texto diferente
+                if (resolvidoPeloUsuario)
+                {
+                    text = "Encerrado (IA)";
+                    backColor = Color.FromArgb(200, 220, 200);
+                    textColor = Color.FromArgb(51, 105, 30);
+                }
                 break;
             case "aberto":
                 backColor = Color.FromArgb(200, 220, 255);
@@ -231,6 +347,13 @@ public partial class FrmPainelSuporte : Form
             case "em atendimento":
                 backColor = Color.FromArgb(190, 240, 230);
                 textColor = Color.DarkCyan;
+                break;
+            case "resolvido pelo usuário (ia)":
+            case "resolvidopelousuario":
+            case "resolvido":
+                backColor = Color.FromArgb(220, 237, 200);
+                textColor = Color.FromArgb(51, 105, 30);
+                text = "Resolvido (IA)";
                 break;
             default:
                 backColor = Color.LightGray;

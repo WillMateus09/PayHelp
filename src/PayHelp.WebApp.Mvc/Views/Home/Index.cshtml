@@ -1,4 +1,5 @@
-﻿@{
+﻿@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
     Layout = "~/Views/Shared/_Layout.cshtml";
     var isAuth = User?.Identity?.IsAuthenticated == true;
     var isSimples = User?.IsInRole("Simples") == true;
@@ -198,11 +199,6 @@ else
     </section>
 }
 
-            </div>
-        </div>
-    </section>
-}
-
 @if (isSuporte)
 {
 @section Scripts {
@@ -227,8 +223,12 @@ else
                 console.log('Notificação:', msg);
             }
 
+            // Build API hub URL from env or config (strip trailing /api)
+            const apiBase = '@((Environment.GetEnvironmentVariable("PAYHELP_API_BASE") ?? Configuration["Api:BaseUrl"])?.TrimEnd('/') ?? "")';
+            const hubUrl = apiBase && apiBase.toLowerCase().endsWith('/api') ? apiBase.slice(0, -4) + '/hubs/chat' : (apiBase ? apiBase + '/hubs/chat' : '/hubs/chat');
+
             const connection = new signalR.HubConnectionBuilder()
-                .withUrl("/hubs/chat")
+                .withUrl(hubUrl)
                 .withAutomaticReconnect()
                 .build();
 

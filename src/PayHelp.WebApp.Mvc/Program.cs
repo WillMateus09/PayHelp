@@ -7,10 +7,10 @@ using PayHelp.Infrastructure.InMemory;
 var builder = WebApplication.CreateBuilder(args);
 
 
-var apiBaseFromEnv = Environment.GetEnvironmentVariable("PAYHELP_API_URL");
+var apiBaseFromEnv = Environment.GetEnvironmentVariable("PAYHELP_API_BASE")
+                     ?? Environment.GetEnvironmentVariable("PAYHELP_API_URL");
 if (!string.IsNullOrWhiteSpace(apiBaseFromEnv))
 {
-
     if (apiBaseFromEnv.EndsWith("/")) apiBaseFromEnv = apiBaseFromEnv.TrimEnd('/');
     builder.Configuration["Api:BaseUrl"] = apiBaseFromEnv;
 }
@@ -55,7 +55,7 @@ builder.Services.AddHttpClient<ApiService>((sp, client) =>
 {
     var opts = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ApiOptions>>().Value;
     var baseUrl = string.IsNullOrWhiteSpace(opts?.BaseUrl)
-        ? "http://192.168.15.105:5236/api"
+        ? "http://192.168.15.107:5236/api"
         : opts!.BaseUrl!;
     if (!baseUrl.EndsWith("/")) baseUrl += "/";
     client.BaseAddress = new Uri(baseUrl);

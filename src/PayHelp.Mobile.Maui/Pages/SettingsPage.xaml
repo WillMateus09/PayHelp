@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Pages.SettingsPage"
+             Title="Configurar Servidor">
+  <VerticalStackLayout Padding="20" Spacing="14">
+    <Label Text="URL da API"/>
+    <Entry Text="{Binding BaseUrl}" Placeholder="http://&lt;ip&gt;:&lt;porta&gt;/api/" Keyboard="Url"/>
+
+    <HorizontalStackLayout Spacing="10">
+      <Button Text="Salvar" Command="{Binding SaveCommand}"/>
+      <Button Text="Testar" Command="{Binding TestCommand}"/>
+      <Button Text="Android (10.0.2.2)" Command="{Binding UseAndroidEmulatorCommand}"/>
+    </HorizontalStackLayout>
+
+    <Label TextColor="{Binding TestOk, Converter={StaticResource BoolToColorConverter}}"
+           Text="{Binding TestMessage}"/>
+  </VerticalStackLayout>
+</ContentPage>

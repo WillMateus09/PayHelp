@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:PayHelp.Mobile.Maui.Converters"
+             xmlns:utilities="clr-namespace:PayHelp.Mobile.Maui.Utilities"
              x:Class="PayHelp.Mobile.Maui.Views.ChamadosPage"
              x:Name="ChamadosPageRoot"
              Title="Chamados"
              Appearing="ContentPage_Appearing">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:AllTrueConverter x:Key="AllTrueConverter" />
+            <utilities:HasValueToBoolConverter x:Key="HasValueToBoolConverter" />
+            <utilities:NotEncerradoConverter x:Key="NotEncerradoConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
     <Grid RowDefinitions="Auto,*" Padding="20" RowSpacing="20">
         
         <!-- Header Actions -->
@@ -87,7 +96,7 @@
                                 <!-- Status e Badge IA -->
                                 <HorizontalStackLayout Spacing="8">
                                     <Border Style="{StaticResource Badge}">
-                                        <Label Text="{Binding Status}" 
+                                        <Label Text="{Binding StatusTexto}" 
                                                TextColor="White"
                                                FontSize="12"
                                                FontAttributes="Bold"/>
@@ -104,6 +113,34 @@
                                 
                                 <Label Text="{Binding DataAbertura, StringFormat='Aberto em: {0:dd/MM/yyyy HH:mm}'}" 
                                        Style="{StaticResource Caption}"/>
+                                
+                                <!-- Botões para Suporte quando Resolvido via IA -->
+                                <HorizontalStackLayout Spacing="8" 
+                                                     Margin="0,8,0,0">
+                                    <HorizontalStackLayout.IsVisible>
+                                        <MultiBinding Converter="{StaticResource AllTrueConverter}">
+                                            <Binding Path="BindingContext.IsSuporte" Source="{x:Reference ChamadosPageRoot}" />
+                                            <Binding Path="DataResolvidoUsuario" Converter="{StaticResource HasValueToBoolConverter}" />
+                                        </MultiBinding>
+                                    </HorizontalStackLayout.IsVisible>
+                                    
+                                    <Button Text="✓ Encerrar"
+                                            Style="{StaticResource SuccessButton}"
+                                            FontSize="12"
+                                            Padding="12,4"
+                                            HeightRequest="32"
+                                            Command="{Binding Source={x:Reference ChamadosPageRoot}, Path=BindingContext.EncerrarChamadoCommand}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding Source={x:Reference ChamadosPageRoot}, Path=BindingContext.EncerrarChamadoCommand.IsRunning, Converter={StaticResource InvertedBoolConverter}}" />
+                                    
+                                    <Button Text="⭐ Ver Feedback"
+                                            Style="{StaticResource InfoButton}"
+                                            FontSize="12"
+                                            Padding="12,4"
+                                            HeightRequest="32"
+                                            Command="{Binding Source={x:Reference ChamadosPageRoot}, Path=BindingContext.VerFeedbackCommand}"
+                                            CommandParameter="{Binding}" />
+                                </HorizontalStackLayout>
                             </VerticalStackLayout>
 
                             <!-- Botão de Ação -->

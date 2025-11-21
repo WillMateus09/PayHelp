@@ -1,13 +1,22 @@
 @model PayHelp.WebApp.Mvc.ViewModels.SupportDashboardViewModel
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@using System.Text.Json
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var abertos = Model?.Abertos ?? new List<PayHelp.WebApp.Mvc.ViewModels.TicketListItemViewModel>();
     var emAtendimento = Model?.EmAtendimento ?? new List<PayHelp.WebApp.Mvc.ViewModels.TicketListItemViewModel>();
     var encerrados = Model?.Encerrados ?? new List<PayHelp.WebApp.Mvc.ViewModels.TicketListItemViewModel>();
+    var resolvidosPeloUsuario = Model?.Tickets?.Where(t => t.ResolvidoPeloUsuario).ToList() ?? new List<PayHelp.WebApp.Mvc.ViewModels.TicketListItemViewModel>();
     var triaging = Model?.TriagingIds ?? new HashSet<Guid>();
 
-    var todos = abertos.Concat(emAtendimento).Concat(encerrados).ToList();
+    var todos = abertos
+        .Concat(emAtendimento)
+        .Concat(encerrados)
+        .Concat(resolvidosPeloUsuario)
+        .GroupBy(x => x.Id)
+        .Select(g => g.First())
+        .ToList();
 
     int Count(IEnumerable<PayHelp.WebApp.Mvc.ViewModels.TicketListItemViewModel> col) => col?.Count() ?? 0;
 
@@ -21,6 +30,7 @@
             "aberto" => "badge-status-danger",
             "ematendimento" => "badge-status-warning",
             "encerrado" => "badge-status-success",
+            "resolvidopelousuario" => "badge-status-info",
             _ => "badge bg-light text-dark border"
         };
     }
@@ -29,8 +39,41 @@
     {
         if (string.IsNullOrWhiteSpace(status)) return "";
         if (string.Equals(status, "EmAtendimento", StringComparison.OrdinalIgnoreCase)) return "Em Atendimento";
+        if (string.Equals(status, "ResolvidoPeloUsuario", StringComparison.OrdinalIgnoreCase)) return "Resolvido pelo Usuário";
         return status;
     }
+
+    var envBase = Environment.GetEnvironmentVariable("PAYHELP_API_BASE")
+                 ?? Environment.GetEnvironmentVariable("PAYHELP_API_URL");
+    var cfgBase = Configuration["Api:BaseUrl"];
+    var apiBase = !string.IsNullOrWhiteSpace(envBase) ? envBase : cfgBase;
+    if (!string.IsNullOrWhiteSpace(apiBase))
+    {
+        apiBase = apiBase!.TrimEnd('/');
+        if (apiBase.EndsWith("/api", StringComparison.OrdinalIgnoreCase))
+        {
+            apiBase = apiBase.Substring(0, apiBase.Length - 4);
+        }
+    }
+    var hubUrl = string.IsNullOrWhiteSpace(apiBase) ? "/hubs/chat" : $"{apiBase}/hubs/chat";
+}
+
+<!-- Mensagens de Sucesso/Erro -->
+@if (TempData["Sucesso"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>@TempData["Sucesso"]</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+}
+@if (TempData["Erro"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <strong>@TempData["Erro"]</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
 }
 
 <!-- Header da Página -->
@@ -64,83 +107,115 @@
 <!-- Cards de Estatísticas -->
 
 <!-- Cards de Estatísticas -->
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
+<div class="row mb-4 g-3">
+    <!-- Primeira Linha: Cards Principais -->
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
         <div class="stats-card-modern stats-primary">
-            <div class="stats-icon">
-                <i class="fas fa-list"></i>
-            </div>
-            <div class="stats-content">
-                <div class="stats-label">Total</div>
+            <div class="stats-label">TOTAL</div>
+            <div class="d-flex align-items-center gap-3 mt-2">
+                <div class="stats-icon">
+                    <i class="fas fa-list"></i>
+                </div>
                 <div class="stats-value">@todos.Count</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
         <div class="stats-card-modern stats-danger">
-            <div class="stats-icon">
-                <i class="fas fa-exclamation-circle"></i>
-            </div>
-            <div class="stats-content">
-                <div class="stats-label">Abertos</div>
+            <div class="stats-label">ABERTOS</div>
+            <div class="d-flex align-items-center gap-3 mt-2">
+                <div class="stats-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
                 <div class="stats-value">@Count(abertos)</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
         <div class="stats-card-modern stats-warning">
-            <div class="stats-icon">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="stats-content">
-                <div class="stats-label">Em Atendimento</div>
+            <div class="stats-label">EM<br/>ATENDIMENTO</div>
+            <div class="d-flex align-items-center gap-3 mt-2">
+                <div class="stats-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
                 <div class="stats-value">@Count(emAtendimento)</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
-        <div class="stats-card-modern stats-success">
-            <div class="stats-icon">
-                <i class="fas fa-check-circle"></i>
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="stats-card-modern stats-info">
+            <div class="stats-label">RESOLVIDO<br/>USUÁRIO</div>
+            <div class="d-flex align-items-center gap-3 mt-2">
+                <div class="stats-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stats-value">@Count(resolvidosPeloUsuario)</div>
             </div>
-            <div class="stats-content">
-                <div class="stats-label">Encerrados</div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="stats-card-modern stats-success">
+            <div class="stats-label">ENCERRADOS</div>
+            <div class="d-flex align-items-center gap-3 mt-2">
+                <div class="stats-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
                 <div class="stats-value">@Count(encerrados)</div>
             </div>
         </div>
+    </div>
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <a href="javascript:void(0)" onclick="mostrarFeedbacks()" style="text-decoration: none;">
+            <div class="stats-card-modern" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; cursor: pointer; transition: all 0.3s ease; height: 100%;"
+                 onmouseover="this.style.transform='translateY(-5px) scale(1.02)'; this.style.boxShadow='0 8px 25px rgba(102, 126, 234, 0.4)'" 
+                 onmouseout="this.style.transform=''; this.style.boxShadow=''">
+                <div class="stats-label" style="color: rgba(255,255,255,0.95); font-weight: 500;">AVALIAÇÕES</div>
+                <div class="d-flex align-items-center gap-3 mt-2">
+                    <div class="stats-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stats-value">@resolvidosPeloUsuario.Count(t => t.NotaUsuario.HasValue)</div>
+                </div>
+            </div>
+        </a>
     </div>
 </div>
 
 <!-- Filtros e Busca -->
 <div class="card card-modern mb-4">
-    <div class="card-body">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div class="dashboard-filters">
+    <div class="card-body p-4">
+        <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3">
+            <div class="dashboard-filters flex-wrap d-flex gap-2">
                 <a class="filter-btn @(Model?.FiltroSelecionado == null ? "active" : "")" 
                    href="@Url.Action("Dashboard", new { status = "" })">
-                    <i class="fas fa-th-large me-1"></i>
+                    <i class="fas fa-th-large me-2"></i>
                     Todos <span class="filter-count">@todos.Count</span>
                 </a>
                 <a class="filter-btn @(Model?.FiltroSelecionado?.ToString() == "Aberto" ? "active" : "")" 
                    href="@Url.Action("Dashboard", new { status = PayHelp.Domain.Enums.TicketStatus.Aberto })">
-                    <i class="fas fa-exclamation-circle me-1"></i>
+                    <i class="fas fa-exclamation-circle me-2"></i>
                     Aberto <span class="filter-count">@Count(abertos)</span>
                 </a>
                 <a class="filter-btn @(Model?.FiltroSelecionado?.ToString() == "EmAtendimento" ? "active" : "")" 
                    href="@Url.Action("Dashboard", new { status = PayHelp.Domain.Enums.TicketStatus.EmAtendimento })">
-                    <i class="fas fa-user-clock me-1"></i>
+                    <i class="fas fa-user-clock me-2"></i>
                     Em Atendimento <span class="filter-count">@Count(emAtendimento)</span>
+                </a>
+                <a class="filter-btn @(Model?.FiltroSelecionado?.ToString() == "ResolvidoPeloUsuario" ? "active" : "")" 
+                   href="@Url.Action("Dashboard", new { status = PayHelp.Domain.Enums.TicketStatus.ResolvidoPeloUsuario })">
+                    <i class="fas fa-user-check me-2"></i>
+                    Resolvido <span class="filter-count">@Count(resolvidosPeloUsuario)</span>
                 </a>
                 <a class="filter-btn @(Model?.FiltroSelecionado?.ToString() == "Encerrado" ? "active" : "")" 
                    href="@Url.Action("Dashboard", new { status = PayHelp.Domain.Enums.TicketStatus.Encerrado })">
-                    <i class="fas fa-check-circle me-1"></i>
+                    <i class="fas fa-check-circle me-2"></i>
                     Encerrado <span class="filter-count">@Count(encerrados)</span>
                 </a>
             </div>
 
-            <div class="search-box-modern">
+            <div class="search-box-modern" style="min-width: 250px;">
                 <i class="fas fa-search"></i>
-                <input id="filterSearch" type="search" class="search-input" placeholder="Buscar por título, status...">
+                <input id="filterSearch" type="search" class="search-input" placeholder="Buscar por título...">
             </div>
         </div>
     </div>
@@ -152,6 +227,7 @@
         {
             "Aberto" => abertos,
             "EmAtendimento" => emAtendimento,
+            "ResolvidoPeloUsuario" => resolvidosPeloUsuario,
             "Encerrado" => encerrados,
             _ => todos
         };
@@ -172,21 +248,27 @@
 }
 else
 {
+    <!-- Token CSRF para requisições AJAX -->
+    @Html.AntiForgeryToken()
+    
     <div class="card card-modern">
-        <div class="card-body">
-            <h5 class="card-title-modern mb-3">
-                <i class="fas fa-list me-2"></i>
-                Lista de Chamados (@itens.Count())
-            </h5>
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h5 class="card-title-modern mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Lista de Chamados 
+                    <span class="badge bg-primary ms-2">@itens.Count()</span>
+                </h5>
+            </div>
             <div class="table-responsive">
-                <table id="ticketsTable" class="table table-modern table-hover">
+                <table id="ticketsTable" class="table table-modern table-hover align-middle">
                     <thead>
                         <tr>
-                            <th><i class="fas fa-heading me-1"></i> Título</th>
-                            <th class="text-center"><i class="fas fa-info-circle me-1"></i> Status</th>
-                            <th><i class="fas fa-calendar-plus me-1"></i> Criado</th>
-                            <th><i class="fas fa-calendar-check me-1"></i> Encerrado</th>
-                            <th class="text-center"><i class="fas fa-cog me-1"></i> Ações</th>
+                            <th style="width: 45%;"><i class="fas fa-heading me-2"></i>Título</th>
+                            <th class="text-center" style="width: 15%;"><i class="fas fa-info-circle me-2"></i>Status</th>
+                            <th style="width: 12%;"><i class="fas fa-calendar-plus me-2"></i>Criado</th>
+                            <th style="width: 12%;"><i class="fas fa-calendar-check me-2"></i>Encerrado</th>
+                            <th class="text-center" style="width: 16%;"><i class="fas fa-cog me-2"></i>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -199,18 +281,41 @@ else
                         <tr class="support-ticket-row" data-status="@statusKey" data-id="@t.Id">
                             <td>
                                 <div class="ticket-title-cell">
-                                    <div class="fw-bold text-dark">@t.Titulo</div>
-                                    <div class="text-muted small">
-                                        <i class="fas fa-hashtag me-1"></i>ID: @t.Id.ToString().Substring(0, 8)
-                                    </div>
-                                    @if (iaAtiva && statusKey == "aberto")
-                                    {
-                                        <div class="mt-2">
-                                            <span class="badge-ia-active">
-                                                <i class="fas fa-robot me-1"></i> IA analisando...
+                                    <div class="fw-bold text-dark mb-1">@t.Titulo</div>
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="text-muted small">
+                                            <i class="fas fa-hashtag me-1"></i>@t.Id.ToString().Substring(0, 8)
+                                        </span>
+                                        @if (iaAtiva && statusKey == "aberto")
+                                        {
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info">
+                                                <i class="fas fa-robot me-1"></i> IA analisando
                                             </span>
-                                        </div>
-                                    }
+                                        }
+                                        @if (t.ResolvidoPeloUsuario)
+                                        {
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-user-check me-1"></i> Resolvido pelo Usuário
+                                            </span>
+                                            @if (t.NotaUsuario.HasValue)
+                                            {
+                                                <span class="small">
+                                                    @for (int i = 1; i <= 5; i++)
+                                                    {
+                                                        if (i <= t.NotaUsuario.Value)
+                                                        {
+                                                            <i class="fas fa-star text-warning"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="far fa-star text-muted"></i>
+                                                        }
+                                                    }
+                                                    <span class="text-muted ms-1">(@t.NotaUsuario.Value)/5</span>
+                                                </span>
+                                            }
+                                        }
+                                    </div>
                                 </div>
                             </td>
                             <td class="text-center">
@@ -242,37 +347,65 @@ else
                                 }
                             </td>
                             <td class="text-center">
-                                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                <div class="d-flex gap-2 justify-content-center">
                                     @if (statusKey == "aberto" || statusKey == "ematendimento")
                                     {
                                         <form method="post" action="@Url.Action("Assumir", "Support", new { id = t.Id })" class="d-inline">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-action-assumir btn-sm">
-                                                <i class="fas fa-hand-paper me-1"></i> Assumir
+                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-hand-paper me-1"></i>Assumir
                                             </button>
                                         </form>
                                     }
-                                    @if (t.EncerradoEm != null)
+                                    
+                                    @if (t.ResolvidoPeloUsuario)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-info"
+                                                onclick="verFeedback('@t.Id', '@t.FeedbackUsuario?.Replace("'", "\\'").Replace("\n", "\\n").Replace("\r", "")', @(t.NotaUsuario ?? 0), '@(t.DataResolvidoUsuario?.ToString("dd/MM/yyyy HH:mm") ?? "Data desconhecida")')">
+                                            <i class="fas fa-comment-dots me-1"></i>Ver Feedback
+                                        </button>
+                                        
+                                        @if (t.EncerradoEm == null)
+                                        {
+                                            <form method="post" action="@Url.Action("EncerrarComFeedback", "Support", new { id = t.Id })" class="d-inline form-encerrar" id="form-encerrar-@t.Id">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-success btn-finalizar-ticket-ajax" 
+                                                        id="btn-finalizar-@t.Id"
+                                                        data-ticket-id="@t.Id"
+                                                        data-action-url="@Url.Action("EncerrarComFeedback", "Support", new { id = t.Id })">
+                                                    <i class="fas fa-check-double me-1"></i>Encerrar
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-secondary" disabled>
+                                                <i class="fas fa-check-circle me-1"></i>Encerrado
+                                            </button>
+                                        }
+                                    }
+                                    
+                                    @if (t.EncerradoEm != null && !t.ResolvidoPeloUsuario)
                                     {
                                         if (t.PossuiResolucao)
                                         {
-                                            <a class="btn btn-action-resolucao-locked btn-sm" 
-                                               href="@Url.Action("ResolucaoFinal", "Support", new { ticketId = t.Id })" 
-                                               title="Ver Resolução Final (bloqueada para edição)">
-                                                <i class="fas fa-lock me-1"></i> Resolução
+                                            <a class="btn btn-sm btn-secondary"
+                                               href="@Url.Action("ResolucaoFinal", "Support", new { ticketId = t.Id })">
+                                                <i class="fas fa-lock me-1"></i>Ver
                                             </a>
                                         }
                                         else
                                         {
-                                            <a class="btn btn-action-resolucao btn-sm" 
-                                               href="@Url.Action("ResolucaoFinal", "Support", new { ticketId = t.Id })" 
-                                               title="Registrar Resolução Final">
-                                                <i class="fas fa-file-medical me-1"></i> Resolução
+                                            <a class="btn btn-sm btn-warning"
+                                               href="@Url.Action("ResolucaoFinal", "Support", new { ticketId = t.Id })">
+                                                <i class="fas fa-file-medical me-1"></i>Registrar
                                             </a>
                                         }
                                     }
-                                    <a class="btn btn-action-view btn-sm" href="@Url.Action("Chat", "Support", new { id = t.Id })">
-                                        <i class="fas fa-eye me-1"></i> Ver
+                                    
+                                    <a class="btn btn-sm btn-outline-primary" 
+                                       href="@Url.Action("Chat", "Support", new { id = t.Id })">
+                                        <i class="fas fa-eye me-1"></i>Ver
                                     </a>
                                 </div>
                             </td>
@@ -285,9 +418,20 @@ else
     </div>
 }
 
+<style>
+    .btn-encerrar:disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        pointer-events: none;
+    }
+</style>
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
+        // Bypass any legacy confirm prompts on this page (scoped to this view only)
+        try { window.confirm = (msg) => { console.warn('confirm bypassed:', msg); return true; }; } catch { }
+
         const search = document.getElementById('filterSearch');
         const rows = document.querySelectorAll('#ticketsTable tbody tr');
         search?.addEventListener('input', () => {
@@ -298,9 +442,266 @@ else
             });
         });
 
+        // Popup de Feedback do Usuário
+        function verFeedback(ticketId, feedback, nota, dataResolvido) {
+            const stars = nota ? '⭐'.repeat(nota) : 'Sem avaliação';
+            const feedbackText = feedback || 'Sem comentário';
+            const data = dataResolvido || 'Data desconhecida';
+            
+            const html = `
+                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                            background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                            z-index: 10000; max-width: 500px; width: 90%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h4 style="margin: 0; color: #333;">
+                            <i class="fas fa-comment-alt-smile" style="color: #17a2b8;"></i>
+                            Feedback do Usuário
+                        </h4>
+                        <button onclick="fecharFeedback()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">×</button>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+                        <div style="font-size: 32px; text-align: center; margin-bottom: 10px;">${stars}</div>
+                        <div style="color: #666; font-size: 14px; text-align: center; margin-bottom: 15px;">
+                            <i class="fas fa-clock"></i> Resolvido em: ${data}
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8;">
+                            <strong style="color: #333; display: block; margin-bottom: 8px;">Comentário:</strong>
+                            <p style="margin: 0; color: #555; line-height: 1.6;">${feedbackText}</p>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <button onclick="fecharFeedback()" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-times me-1"></i> Fechar
+                        </button>
+                    </div>
+                </div>
+                <div id="feedbackOverlay" onclick="fecharFeedback()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                            background: rgba(0,0,0,0.5); z-index: 9999;"></div>
+            `;
+            
+            const div = document.createElement('div');
+            div.id = 'feedbackPopup';
+            div.innerHTML = html;
+            document.body.appendChild(div);
+        }
+
+        function fecharFeedback() {
+            const popup = document.getElementById('feedbackPopup');
+            if (popup) popup.remove();
+        }
+
+        // Painel lateral de todas as avaliações
+        function mostrarFeedbacks() {
+            const feedbacks = @Html.Raw(Json.Serialize(resolvidosPeloUsuario.Where(t => t.NotaUsuario.HasValue).Select(t => new {
+                id = t.Id,
+                titulo = t.Titulo,
+                nota = t.NotaUsuario,
+                feedback = t.FeedbackUsuario,
+                data = t.DataResolvidoUsuario?.ToString("dd/MM/yyyy HH:mm")
+            })));
+            
+            let html = `
+                <div id="feedbacksSidebar" style="position: fixed; top: 0; right: 0; width: 450px; height: 100vh; 
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                            box-shadow: -5px 0 30px rgba(0,0,0,0.3); z-index: 10001; 
+                            padding: 30px; overflow-y: auto; animation: slideIn 0.3s ease-out;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h3 style="margin: 0; color: white; font-weight: 600;">
+                            <i class="fas fa-star me-2"></i>
+                            Avaliações dos Usuários
+                        </h3>
+                        <button onclick="fecharFeedbacks()" style="background: rgba(255,255,255,0.2); border: none; 
+                                color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; 
+                                cursor: pointer; transition: background 0.2s;">×</button>
+                    </div>
+                    <div style="color: rgba(255,255,255,0.9); font-size: 14px; margin-bottom: 20px;">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Total de ${feedbacks.length} avaliação(ões) recebida(s)
+                    </div>
+            `;
+            
+            if (feedbacks.length === 0) {
+                html += `
+                    <div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.8);">
+                        <i class="fas fa-inbox fa-3x mb-3" style="opacity: 0.5;"></i>
+                        <p>Nenhuma avaliação ainda</p>
+                    </div>
+                `;
+            } else {
+                feedbacks.forEach(f => {
+                    const stars = '⭐'.repeat(f.nota || 0);
+                    const feedbackText = f.feedback || '<em>Sem comentário</em>';
+                    html += `
+                        <div style="background: rgba(255,255,255,0.95); border-radius: 12px; padding: 20px; 
+                                    margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 600; color: #333; margin-bottom: 8px; font-size: 15px;">
+                                ${f.titulo}
+                            </div>
+                            <div style="font-size: 24px; margin-bottom: 8px;">${stars}</div>
+                            <div style="color: #666; font-size: 13px; margin-bottom: 12px;">
+                                <i class="fas fa-clock me-1"></i> ${f.data || 'Data desconhecida'}
+                            </div>
+                            <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; 
+                                        color: #555; font-size: 14px; line-height: 1.5; border-left: 3px solid #667eea;">
+                                ${feedbackText}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `</div>`;
+            html += `<div id="feedbacksOverlay" onclick="fecharFeedbacks()" style="position: fixed; top: 0; left: 0; 
+                            right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10000;"></div>`;
+            html += `<style>
+                @@keyframes slideIn {
+                    from { transform: translateX(100%); }
+                    to { transform: translateX(0); }
+                }
+            </style>`;
+            
+            const div = document.createElement('div');
+            div.id = 'feedbacksPanel';
+            div.innerHTML = html;
+            document.body.appendChild(div);
+        }
+
+        function fecharFeedbacks() {
+            const panel = document.getElementById('feedbacksPanel');
+            if (panel) panel.remove();
+        }
+
+        // Função para encerrar chamado via AJAX sem popup
+        function encerrarChamadoAjax(ticketId, actionUrl) {
+            console.log('encerrarChamadoAjax chamado', ticketId, actionUrl);
+            
+            const btn = document.getElementById('btn-finalizar-' + ticketId);
+            console.log('Botão encontrado:', btn);
+            
+            if (btn) {
+                // Desabilita o botão imediatamente
+                btn.disabled = true;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Encerrando...';
+                
+                // Adiciona estilo de opacidade
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'not-allowed';
+            }
+            
+            // Buscar o token CSRF da página
+            const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            console.log('Token element:', tokenElement);
+            
+            if (!tokenElement) {
+                console.error('Token CSRF não encontrado');
+                alert('Erro: Token CSRF não encontrado. Recarregue a página.');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('btn-secondary');
+                    btn.classList.add('btn-danger');
+                    btn.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Erro';
+                    btn.style.opacity = '1';
+                }
+                return false;
+            }
+            
+            const token = tokenElement.value;
+            console.log('Token obtido, fazendo fetch para:', actionUrl);
+            
+            // Fazer o POST via fetch
+            fetch(actionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                credentials: 'same-origin',
+                body: '__RequestVerificationToken=' + encodeURIComponent(token),
+                redirect: 'follow'
+            })
+            .then(response => {
+                console.log('Resposta recebida:', response.status, response.ok, response.redirected);
+                // Aceita códigos 200-399 (sucesso e redirects)
+                if (response.ok || response.redirected || (response.status >= 200 && response.status < 400)) {
+                    console.log('Sucesso! Recarregando página...');
+                    // Recarregar a página imediatamente
+                    window.location.reload();
+                } else {
+                    return response.text().then(text => {
+                        console.error('Erro na resposta:', response.status, text);
+                        throw new Error('Erro ao encerrar chamado: ' + response.status);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erro no fetch:', error);
+                alert('Erro ao encerrar chamado: ' + error.message);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('btn-secondary');
+                    btn.classList.add('btn-danger');
+                    btn.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Erro';
+                    btn.style.opacity = '1';
+                }
+            });
+            
+            return false;
+        }
+
+        // Attach handlers to existing buttons immediately and also via delegated listener
+        function attachFinalizarHandlers() {
+            document.querySelectorAll('.btn-finalizar-ticket-ajax').forEach(btn => {
+                if (btn.dataset.bound === '1') return;
+                btn.dataset.bound = '1';
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    const ticketId = this.getAttribute('data-ticket-id');
+                    const actionUrl = this.getAttribute('data-action-url');
+                    console.log('Botão clicado (direct)!', ticketId, actionUrl);
+                    encerrarChamadoAjax(ticketId, actionUrl);
+                    return false;
+                }, true);
+            });
+        }
+
+        // Bind now (script runs after markup) and on DOMContentLoaded as fallback
+        attachFinalizarHandlers();
+        document.addEventListener('DOMContentLoaded', attachFinalizarHandlers);
+
+        // Delegated listener to catch any dynamically added rows/buttons
+        document.addEventListener('click', function(e){
+            const btn = e.target?.closest?.('.btn-finalizar-ticket-ajax');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            const ticketId = btn.getAttribute('data-ticket-id');
+            const actionUrl = btn.getAttribute('data-action-url');
+            console.log('Botão clicado (delegated)!', ticketId, actionUrl);
+            encerrarChamadoAjax(ticketId, actionUrl);
+            return false;
+        }, true);
+
+        // Delegated submit handler for legacy forms (form-encerrar-*) still present in cached view
+        document.addEventListener('submit', function(e){
+            const form = e.target;
+            if (!form || !form.id) return;
+            if (!form.id.startsWith('form-encerrar-')) return;
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            const ticketId = form.id.replace('form-encerrar-', '');
+            const actionUrl = form.getAttribute('action');
+            console.log('Intercepted legacy form submit for encerrar:', ticketId, actionUrl);
+            encerrarChamadoAjax(ticketId, actionUrl);
+            return false;
+        }, true);
 
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/hubs/chat")
+            .withUrl('@hubUrl')
             .withAutomaticReconnect()
             .build();
 
@@ -334,7 +735,6 @@ else
             }
         });
 
-
         connection.on("StatusChanged", payload => {
             const id = payload?.ticketId;
             const status = (payload?.status || '').toString();
@@ -366,5 +766,7 @@ else
             countEl.textContent = v;
             wrap.style.display = v > 0 ? '' : 'none';
         }
+
+        // (Old per-button binder replaced by attachFinalizarHandlers + delegated listener above)
     </script>
 }

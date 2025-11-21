@@ -10,4 +10,5 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string SenhaHash { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.Simples;
+    public bool IsBlocked { get; set; } = false;
 }

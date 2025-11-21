@@ -1,0 +1,255 @@
+/* ========================================
+   USER RESOLUTION FLOW STYLES
+   Estilos para o fluxo de resolução de chamados pelo usuário
+   ======================================== */
+
+/* Badge de Status Resolvido pelo Usuário (IA) */
+.badge-chat-user-resolved {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* Botão Resolvido */
+.btn-chat-resolve {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-chat-resolve:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+}
+
+.btn-chat-resolve:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* Modal de Feedback do Usuário */
+#modalResolverUsuario .modal-content {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+#modalResolverUsuario .modal-header {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+  padding: 1.25rem 1.5rem;
+}
+
+#modalResolverUsuario .modal-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+#modalResolverUsuario .btn-close {
+  filter: brightness(0) invert(1);
+}
+
+#modalResolverUsuario .modal-body {
+  padding: 2rem 1.5rem;
+}
+
+/* Rating por estrelas */
+.star-rating {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.star-rating .btn-check {
+  display: none;
+}
+
+.star-rating .btn {
+  background: transparent;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.8rem;
+  color: #d1d5db;
+}
+
+.star-rating .btn:hover,
+.star-rating .btn-check:checked ~ .btn,
+.star-rating .btn-check:checked + .btn {
+  color: #fbbf24;
+  transform: scale(1.2);
+}
+
+/* Efeito de hover nas estrelas */
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+  color: #fbbf24 !important;
+  transform: scale(1.15);
+}
+
+/* Stats Card para Resolvidos pela IA */
+.stats-card-modern.stats-info .stats-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+}
+
+/* Feedback List (Sidebar do Dashboard do Suporte) */
+.feedback-list {
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.feedback-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.feedback-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.feedback-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  border-radius: 10px;
+}
+
+.feedback-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+}
+
+.feedback-item {
+  transition: all 0.3s ease;
+  padding: 0.75rem;
+  border-radius: 8px;
+}
+
+.feedback-item:hover {
+  background: rgba(139, 92, 246, 0.05);
+  transform: translateX(4px);
+}
+
+.feedback-item:last-child {
+  border-bottom: none !important;
+}
+
+.feedback-text {
+  color: #6b7280;
+  line-height: 1.5;
+  font-style: italic;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border-left: 3px solid #8b5cf6;
+  border-radius: 4px;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.rating-stars i {
+  font-size: 1rem;
+}
+
+/* Sticky Sidebar */
+.sticky-top {
+  position: sticky;
+  z-index: 1020;
+}
+
+/* Badge de Status com Ícone */
+.badge-status-resolved-user {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Animações */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 991.98px) {
+  .feedback-list {
+    max-height: 400px;
+  }
+  
+  .sticky-top {
+    position: relative !important;
+    top: auto !important;
+  }
+}
+
+/* Filtro adicional para Resolvidos pela IA */
+.filter-btn.active[href*="ResolvidoUsuarioIA"] {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  color: white;
+}
+
+/* Notice de Chamado Resolvido pelo Usuário */
+.chat-closed-notice {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  color: #6b21a8;
+}
+
+.chat-closed-notice strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Indicador de Média de Notas */
+.text-success {
+  color: #10b981 !important;
+}
+
+.text-warning {
+  color: #f59e0b !important;
+}
+
+.text-danger {
+  color: #ef4444 !important;
+}
+
+/* Hover effect na sidebar de comentários */
+.card.sticky-top:hover {
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+  transition: box-shadow 0.3s ease;
+}

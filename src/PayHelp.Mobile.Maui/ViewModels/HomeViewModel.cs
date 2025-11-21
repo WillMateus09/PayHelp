@@ -9,6 +9,7 @@ public partial class HomeViewModel : BaseViewModel
     [ObservableProperty] private string userName = string.Empty;
     [ObservableProperty] private string userEmail = string.Empty;
     [ObservableProperty] private string userRole = string.Empty;
+    [ObservableProperty] private bool isSuporte;
 
     public string DisplayUser => string.IsNullOrWhiteSpace(UserName)
         ? (string.IsNullOrWhiteSpace(UserEmail) ? "" : UserEmail)
@@ -23,6 +24,10 @@ public partial class HomeViewModel : BaseViewModel
         UserName = (await AppSettings.GetUserNameAsync()) ?? string.Empty;
         UserEmail = (await AppSettings.GetUserEmailAsync()) ?? string.Empty;
         UserRole = (await AppSettings.GetUserRoleAsync()) ?? string.Empty;
+        
+        // Verificar se é suporte
+        var role = UserRole.ToLowerInvariant();
+        IsSuporte = role.Contains("suporte") || role.Contains("support");
     }
 
     [RelayCommand]

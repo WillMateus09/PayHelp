@@ -20,6 +20,8 @@ namespace PayHelp.Desktop.WinForms
             btnAssumir = new System.Windows.Forms.Button();
             btnEmAtendimento = new System.Windows.Forms.Button();
             btnEncerrar = new System.Windows.Forms.Button();
+            btnVerFeedback = new System.Windows.Forms.Button();
+            btnTodosFeedbacks = new System.Windows.Forms.Button();
             topBar = new System.Windows.Forms.Panel();
             filterRow = new System.Windows.Forms.FlowLayoutPanel();
             bottomBar = new System.Windows.Forms.Panel();
@@ -136,13 +138,35 @@ namespace PayHelp.Desktop.WinForms
             btnEncerrar.AutoSize = true;
             btnEncerrar.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             btnEncerrar.MinimumSize = new System.Drawing.Size(110, 36);
-            btnEncerrar.Margin = new System.Windows.Forms.Padding(0);
+            btnEncerrar.Margin = new System.Windows.Forms.Padding(0, 0, 12, 0);
             btnEncerrar.Name = "btnEncerrar";
             btnEncerrar.TabIndex = 2;
             btnEncerrar.Text = "Encerrar";
             btnEncerrar.Tag = "danger";
             btnEncerrar.UseVisualStyleBackColor = true;
             btnEncerrar.Click += btnEncerrar_Click;
+
+            btnVerFeedback.AutoSize = true;
+            btnVerFeedback.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            btnVerFeedback.MinimumSize = new System.Drawing.Size(120, 36);
+            btnVerFeedback.Margin = new System.Windows.Forms.Padding(0, 0, 12, 0);
+            btnVerFeedback.Name = "btnVerFeedback";
+            btnVerFeedback.TabIndex = 3;
+            btnVerFeedback.Text = "Ver Feedback";
+            btnVerFeedback.Tag = "secondary";
+            btnVerFeedback.UseVisualStyleBackColor = true;
+            btnVerFeedback.Click += BtnVerFeedback_Click;
+
+            btnTodosFeedbacks.AutoSize = true;
+            btnTodosFeedbacks.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            btnTodosFeedbacks.MinimumSize = new System.Drawing.Size(140, 36);
+            btnTodosFeedbacks.Margin = new System.Windows.Forms.Padding(0, 0, 12, 0);
+            btnTodosFeedbacks.Name = "btnTodosFeedbacks";
+            btnTodosFeedbacks.TabIndex = 4;
+            btnTodosFeedbacks.Text = "Todos Feedbacks";
+            btnTodosFeedbacks.Tag = "secondary";
+            btnTodosFeedbacks.UseVisualStyleBackColor = true;
+            btnTodosFeedbacks.Click += BtnTodosFeedbacks_Click;
 
 
 
@@ -173,8 +197,10 @@ namespace PayHelp.Desktop.WinForms
 
 
             actions.Controls.Add(btnAssumir);
-            btnEmAtendimento.Visible = false;
-            btnEncerrar.Visible = false;
+            actions.Controls.Add(btnEmAtendimento);
+            actions.Controls.Add(btnTodosFeedbacks);
+            actions.Controls.Add(btnVerFeedback);
+            actions.Controls.Add(btnEncerrar);
             bottomBar.Controls.Add(actions);
 
 
@@ -205,6 +231,8 @@ namespace PayHelp.Desktop.WinForms
         private System.Windows.Forms.Button btnAssumir;
         private System.Windows.Forms.Button btnEmAtendimento;
         private System.Windows.Forms.Button btnEncerrar;
+        private System.Windows.Forms.Button btnVerFeedback;
+        private System.Windows.Forms.Button btnTodosFeedbacks;
         private System.Windows.Forms.Panel topBar;
         private System.Windows.Forms.FlowLayoutPanel filterRow;
         private System.Windows.Forms.Panel bottomBar;

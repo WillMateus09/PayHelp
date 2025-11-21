@@ -5,16 +5,20 @@ public partial class FrmChatChamado : Form
 {
     private readonly ApiClient _api;
     private readonly SessionContext _session;
+    private readonly IAFeedbackService? _feedbackService;
     private Guid? _initialTicketId;
     private System.Windows.Forms.Timer? _timer;
     private readonly Button _btnChamarAtendente = new Button();
     private readonly Button _btnEncerrar = new Button();
+    private readonly Button _btnMarcarResolvido = new Button();
     private bool _triagemFeitaParaTicketAtual;
+    private bool _feedbackEnviado = false;
 
-    public FrmChatChamado(ApiClient api, SessionContext session)
+    public FrmChatChamado(ApiClient api, SessionContext session, IAFeedbackService? feedbackService = null)
     {
         _api = api;
         _session = session;
+        _feedbackService = feedbackService;
         InitializeComponent();
         Theme.Apply(this);
         this.Load += async (_, __) => await CarregarTicketsAsync(selectTicketId: _initialTicketId);
@@ -80,6 +84,8 @@ public partial class FrmChatChamado : Form
         }
         if (lstMensagens.Items.Count > 0)
             lstMensagens.TopIndex = lstMensagens.Items.Count - 1;
+
+        await VerificarFeedbackExistente();
         UpdateHeaderBadge();
         UpdateActionButtons();
     }
@@ -209,10 +215,11 @@ public partial class FrmChatChamado : Form
         input.Controls.Add(new Panel { Width = 1 }, 1, 0);
         input.Controls.Add(btnEnviar, 2, 0);
 
-    var triagem = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 4, RowCount = 1 };
-        triagem.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-        triagem.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+    var triagem = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 5, RowCount = 1 };
         triagem.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        triagem.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        triagem.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        triagem.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         triagem.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
     btnTriagem.Tag = "primary"; btnTriagem.Width = 120; btnTriagem.Height = 30;
@@ -220,11 +227,17 @@ public partial class FrmChatChamado : Form
     _btnChamarAtendente.Tag = "primary"; _btnChamarAtendente.AutoSize = true; _btnChamarAtendente.Width = 140; _btnChamarAtendente.Height = 30; _btnChamarAtendente.Text = "Chamar atendente"; _btnChamarAtendente.Click += btnChamarAtendente_Click;
 
     _btnEncerrar.Tag = "danger"; _btnEncerrar.AutoSize = true; _btnEncerrar.Width = 110; _btnEncerrar.Height = 30; _btnEncerrar.Text = "Encerrar"; _btnEncerrar.Click += btnEncerrar_Click;
+        
+    _btnMarcarResolvido.Tag = "success"; _btnMarcarResolvido.AutoSize = true; _btnMarcarResolvido.Width = 100; _btnMarcarResolvido.Height = 30; _btnMarcarResolvido.Text = "Resolvido"; _btnMarcarResolvido.Click += btnMarcarResolvido_Click;
+        
         lblSugestao.AutoSize = true;
-    triagem.Controls.Add(btnTriagem, 0, 0);
-    triagem.Controls.Add(_btnChamarAtendente, 1, 0);
-    triagem.Controls.Add(lblSugestao, 2, 0);
-    triagem.Controls.Add(_btnEncerrar, 3, 0);
+        lblSugestao.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        lblSugestao.Margin = new Padding(12, 6, 0, 0);
+    triagem.Controls.Add(lblSugestao, 0, 0);
+    triagem.Controls.Add(btnTriagem, 1, 0);
+    triagem.Controls.Add(_btnChamarAtendente, 2, 0);
+    triagem.Controls.Add(_btnMarcarResolvido, 3, 0);
+    triagem.Controls.Add(_btnEncerrar, 4, 0);
 
         root.Controls.Add(header, 0, 0);
         root.Controls.Add(lstMensagens, 0, 1);
@@ -268,10 +281,14 @@ public partial class FrmChatChamado : Form
     {
         var ticket = TicketAtual();
         var encerrado = string.Equals(ticket?.Status, TicketStatus.Encerrado, StringComparison.OrdinalIgnoreCase);
+        var resolvidoPeloUsuario = string.Equals(ticket?.Status, "Resolvido pelo Usuário (IA)", StringComparison.OrdinalIgnoreCase) ||
+                                   string.Equals(ticket?.Status, "ResolvidoPeloUsuario", StringComparison.OrdinalIgnoreCase);
+
         if (_session.IsSupport)
         {
             btnTriagem.Visible = false;
             _btnChamarAtendente.Visible = false;
+            _btnMarcarResolvido.Visible = false;
             _btnEncerrar.Visible = true;
             _btnEncerrar.Enabled = ticket != null && !encerrado;
         }
@@ -279,8 +296,109 @@ public partial class FrmChatChamado : Form
         {
             btnTriagem.Visible = true;
             _btnChamarAtendente.Visible = true;
-            _btnChamarAtendente.Enabled = _triagemFeitaParaTicketAtual;
+            _btnChamarAtendente.Enabled = _triagemFeitaParaTicketAtual && !_feedbackEnviado;
             _btnEncerrar.Visible = false;
+
+            _btnMarcarResolvido.Visible = true;
+            _btnMarcarResolvido.Enabled = !_feedbackEnviado && !encerrado && !resolvidoPeloUsuario;
+
+            if (_feedbackEnviado || resolvidoPeloUsuario)
+            {
+                _btnMarcarResolvido.Enabled = false;
+                _btnMarcarResolvido.BackColor = Color.FromArgb(200, 200, 200);
+                _btnMarcarResolvido.ForeColor = Color.Gray;
+                txtMensagem.Enabled = false;
+                btnEnviar.Enabled = false;
+                _btnChamarAtendente.Enabled = false;
+            }
+        }
+    }
+
+    private async Task VerificarFeedbackExistente()
+    {
+        var ticket = TicketAtual();
+        if (ticket is null || _session.IsSupport) return;
+
+        try
+        {
+            var feedback = await _api.ObterFeedbackAsync(ticket.Id);
+            _feedbackEnviado = feedback != null;
+        }
+        catch
+        {
+            _feedbackEnviado = false;
+        }
+    }
+
+    private async void btnMarcarResolvido_Click(object? sender, EventArgs e)
+    {
+        if (_session.CurrentUser is null) return;
+        var ticket = TicketAtual();
+        if (ticket is null) return;
+
+        _btnMarcarResolvido.Enabled = false;
+
+        using var formFeedback = new FrmFeedback();
+        var result = formFeedback.ShowDialog(this);
+
+        if (result == DialogResult.OK)
+        {
+            try
+            {
+                using var loading = LoadingOverlay.Show(this, "Salvando feedback...");
+
+                await _api.SalvarFeedbackAsync(
+                    ticket.Id,
+                    _session.CurrentUser.UserId,
+                    formFeedback.NotaSelecionada,
+                    formFeedback.Comentario
+                );
+
+                await _api.MarcarComoResolvidoPeloUsuarioAsync(ticket.Id);
+
+                if (_feedbackService != null)
+                {
+                    try
+                    {
+                        await _feedbackService.RegistrarFeedbackAsync(new FeedbackModel
+                        {
+                            TicketId = ticket.Id,
+                            UserId = _session.CurrentUser.UserId,
+                            Nota = formFeedback.NotaSelecionada,
+                            Comentario = formFeedback.Comentario
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        AppLog.Write($"[FrmChatChamado] Erro ao processar feedback via IA: {ex.Message}");
+                    }
+                }
+
+                _feedbackEnviado = true;
+
+                MessageBox.Show(
+                    "Feedback enviado com sucesso! O chamado foi marcado como resolvido.",
+                    "Feedback",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                await CarregarTicketsAsync(selectTicketId: ticket.Id);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao salvar feedback: {ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+                _btnMarcarResolvido.Enabled = true;
+            }
+        }
+        else
+        {
+            _btnMarcarResolvido.Enabled = true;
         }
     }
 

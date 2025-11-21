@@ -72,6 +72,18 @@
                 </ul>
                 <ul class="navbar-nav align-items-center">
                     @if(User?.Identity?.IsAuthenticated == true){
+                        @if (role == "Master")
+                        {
+                            <li class="nav-item me-3 dropdown">
+                                <a class="nav-link nav-link-modern dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-shield me-1"></i> Admin
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="adminMenu">
+                                    <li><a class="dropdown-item" href="@Url.Action("Users","Admin")"><i class="fas fa-users me-2"></i>Usuários</a></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("Settings","Admin")"><i class="fas fa-sliders-h me-2"></i>Configurações</a></li>
+                                </ul>
+                            </li>
+                        }
                         <li class="nav-item me-3">
                             <span class="user-greeting">
                                 <i class="fas fa-user-circle me-1"></i> Olá, <strong>@nome</strong>

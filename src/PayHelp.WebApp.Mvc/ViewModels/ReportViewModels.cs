@@ -17,4 +17,7 @@ public class ReportEntryViewModel
     public DateTime CriadoEm { get; set; }
     public DateTime? EncerradoEm { get; set; }
     public TimeSpan? Duracao { get; set; }
+    public bool ResolvidoPeloUsuario { get; set; }
+    public string? FeedbackUsuario { get; set; }
+    public int? NotaUsuario { get; set; }
 }

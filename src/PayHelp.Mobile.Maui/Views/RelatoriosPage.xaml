@@ -55,7 +55,7 @@
                        Style="{StaticResource H4}" />
 
                 <!-- Stats Cards Grid -->
-                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" 
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" 
                       ColumnSpacing="12" RowSpacing="12">
                     
                     <!-- Total Card -->
@@ -146,8 +146,30 @@
                         </VerticalStackLayout>
                     </Border>
 
+                    <!-- Resolvidos pela IA Card -->
+                    <Border Style="{StaticResource CardBorder}" Grid.Row="2" Grid.ColumnSpan="2">
+                        <Border.Shadow>
+                            <Shadow Brush="#9C27B0"
+                                    Opacity="0.15"
+                                    Radius="12"
+                                    Offset="0,4" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="8" Padding="16">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="🤖" FontSize="24"/>
+                                <Label Text="Resolvidos pela IA (usuário simples)" 
+                                       Style="{StaticResource Caption}"
+                                       TextColor="#9C27B0"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding Resumo.ChamadosResolvidosIA}" 
+                                   Style="{StaticResource H2}"
+                                   TextColor="#9C27B0"/>
+                        </VerticalStackLayout>
+                    </Border>
+
                     <!-- Tempo Médio Card -->
-                    <Border Style="{StaticResource CardBorder}" Grid.Row="2">
+                    <Border Style="{StaticResource CardBorder}" Grid.Row="3">
                         <Border.Shadow>
                             <Shadow Brush="{StaticResource Info}"
                                     Opacity="0.15"
@@ -169,7 +191,7 @@
                     </Border>
 
                     <!-- Taxa de Resolução Card -->
-                    <Border Style="{StaticResource CardBorder}" Grid.Row="2" Grid.Column="1">
+                    <Border Style="{StaticResource CardBorder}" Grid.Row="3" Grid.Column="1">
                         <Border.Shadow>
                             <Shadow Brush="{StaticResource Success}"
                                     Opacity="0.15"

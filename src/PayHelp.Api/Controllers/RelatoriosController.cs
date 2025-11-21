@@ -28,7 +28,10 @@ public class RelatoriosController : ControllerBase
             SolicitanteRole = r.SolicitanteRole.ToString(),
             r.Duracao,
             r.CriadoEmUtc,
-            r.EncerradoEmUtc
+            r.EncerradoEmUtc,
+            r.ResolvidoPeloUsuario,
+            r.FeedbackUsuario,
+            r.NotaUsuario
         });
     }
 }

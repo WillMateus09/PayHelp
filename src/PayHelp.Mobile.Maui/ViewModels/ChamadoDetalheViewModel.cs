@@ -25,6 +25,11 @@ public partial class ChamadoDetalheViewModel : BaseViewModel
     [ObservableProperty] private bool canAssumir;
     [ObservableProperty] private bool canEncerrar;
     [ObservableProperty] private bool triagemExecutada;
+    [ObservableProperty] private bool mostrarBotaoMarcarResolvido;
+    [ObservableProperty] private bool mostrarBotaoResolvidoUsuario;
+    [ObservableProperty] private bool botaoResolvidoHabilitado;
+    [ObservableProperty] private bool atendenteJaChamado;
+    [ObservableProperty] private bool mostrarResolucaoFinal;
 
     public ChamadoDetalheViewModel(ChamadoService chamados, TriagemService triagem, FaqService faq)
     { _chamados = chamados; _triagem = triagem; _faq = faq; }
@@ -44,6 +49,9 @@ public partial class ChamadoDetalheViewModel : BaseViewModel
 
         var status = Ticket?.Status ?? string.Empty;
         var encerrado = string.Equals(status, "Encerrado", StringComparison.OrdinalIgnoreCase);
+        
+        // Mostrar Resolução Final APENAS quando encerrado E tem resolução final preenchida
+        MostrarResolucaoFinal = encerrado && !string.IsNullOrWhiteSpace(Ticket?.ResolucaoFinal);
 
         if (IsSuporte)
         {
@@ -66,8 +74,36 @@ public partial class ChamadoDetalheViewModel : BaseViewModel
                 CanChamarAtendente = false;
                 CanAssumir = false;
                 CanEncerrar = false;
+                
+                // Mostrar botão de marcar como resolvido se ainda não foi avaliado
+                MostrarBotaoMarcarResolvido = Ticket?.DataResolvidoUsuario == null;
+                MostrarBotaoResolvidoUsuario = false;
+                BotaoResolvidoHabilitado = false;
                 return;
             }
+            
+            // Se foi resolvido pelo usuário (IA), bloquear chat e botões
+            if (Ticket?.DataResolvidoUsuario.HasValue == true)
+            {
+                MostrarFaq = false;
+                MostrarTriagem = false;
+                CanChat = false; // BLOQUEIO: não pode enviar mensagens
+                CanChamarAtendente = false; // BLOQUEIO: não pode chamar atendente
+                MostrarBotaoResolvidoUsuario = false; // BLOQUEIO: não pode marcar resolvido novamente
+                BotaoResolvidoHabilitado = false;
+                MostrarBotaoMarcarResolvido = false;
+                CanAssumir = false;
+                CanEncerrar = false;
+                return;
+            }
+            
+            // REGRA 1: Botão "Resolvido" visível APENAS se ainda NÃO foi resolvido pelo usuário
+            MostrarBotaoResolvidoUsuario = Ticket?.DataResolvidoUsuario == null;
+            
+            // REGRA 2: Habilitado APENAS se atendente NÃO foi chamado
+            var emAtendimento = string.Equals(status, "EmAtendimento", StringComparison.OrdinalIgnoreCase);
+            AtendenteJaChamado = emAtendimento || Ticket?.SupportUserId != null;
+            BotaoResolvidoHabilitado = !AtendenteJaChamado && Ticket?.DataResolvidoUsuario == null;
 
             bool faqFound = false;
             if (Ticket is not null && !string.IsNullOrWhiteSpace(Ticket.Descricao))
@@ -85,12 +121,13 @@ public partial class ChamadoDetalheViewModel : BaseViewModel
             }
 
             MostrarFaq = faqFound;
-            MostrarTriagem = true;
+            MostrarTriagem = true && Ticket?.DataResolvidoUsuario == null; // Ocultar triagem se já foi resolvido
 
             CanChat = TriagemExecutada;
-            CanChamarAtendente = TriagemExecutada;
+            CanChamarAtendente = TriagemExecutada && !AtendenteJaChamado;
             CanAssumir = false;
             CanEncerrar = false;
+            MostrarBotaoMarcarResolvido = false;
         }
     }
 
@@ -156,6 +193,11 @@ public partial class ChamadoDetalheViewModel : BaseViewModel
             return;
         }
         await _chamados.SendMessageAsync(TicketId, new TicketMessageRequest { Texto = "Um atendente foi acionado para este chamado." }, automatic: true);
+        
+        // REGRA: Após chamar atendente, desabilitar botão Resolvido
+        AtendenteJaChamado = true;
+        BotaoResolvidoHabilitado = false;
+        
         await CarregarAsync();
         await AlertAsync("Enviado", "Um atendente foi acionado para este chamado.");
     }
@@ -252,21 +294,82 @@ public partial class ChamadoDetalheViewModel : BaseViewModel
     public async Task EncerrarAsync()
     {
         if (!IsSuporte || TicketId == Guid.Empty || !CanEncerrar) return;
-        var closed = await _chamados.CloseAsync(TicketId);
-        if (!closed)
+        
+        // Se foi resolvido pelo usuário (tem DataResolvidoUsuario), não pedir resolução final (já tem feedback)
+        var resolvidoPeloUsuario = Ticket?.DataResolvidoUsuario.HasValue == true;
+        
+        System.Diagnostics.Debug.WriteLine($"[ENCERRAR] DataResolvidoUsuario={Ticket?.DataResolvidoUsuario}, resolvidoPeloUsuario={resolvidoPeloUsuario}");
+        
+        // Se foi resolvido pelo usuário, só encerra sem pedir resolução
+        if (resolvidoPeloUsuario)
+        {
+            var closedIA = await _chamados.CloseAsync(TicketId);
+            if (!closedIA)
+            {
+                await AlertAsync("Erro", "Falha ao encerrar o chamado.");
+                return;
+            }
+            await CarregarAsync();
+            return;
+        }
+        
+        // Se NÃO foi resolvido pelo usuário, pede resolução final ANTES de encerrar
+        var resolucao = await PromptAsync("Resolução final", "Descreva a solução aplicada para este chamado:", "Escreva a solução...");
+        
+        // Se cancelou o prompt, não encerra
+        if (string.IsNullOrWhiteSpace(resolucao))
+        {
+            return;
+        }
+        
+        // Fecha o chamado
+        var closedSupport = await _chamados.CloseAsync(TicketId);
+        if (!closedSupport)
         {
             await AlertAsync("Erro", "Falha ao encerrar o chamado.");
             return;
         }
-        var resolucao = await PromptAsync("Resolução final", "Descreva a solução aplicada para este chamado:", "Escreva a solução...");
-        if (!string.IsNullOrWhiteSpace(resolucao))
+        
+        // Registra a resolução
+        var (ok, error) = await _chamados.RegistrarResolucaoFinalAsync(TicketId, resolucao!);
+        if (!ok)
         {
-            var (ok, error) = await _chamados.RegistrarResolucaoFinalAsync(TicketId, resolucao!);
-            if (!ok)
-            {
-                await AlertAsync("Aviso", string.IsNullOrWhiteSpace(error) ? "Resolução não registrada." : error!);
-            }
+            await AlertAsync("Aviso", string.IsNullOrWhiteSpace(error) ? "Resolução não registrada." : error!);
         }
+        
         await CarregarAsync();
+    }
+    
+    [RelayCommand]
+    public async Task MarcarResolvidoAsync()
+    {
+        if (TicketId == Guid.Empty) return;
+        try
+        {
+            await Shell.Current.GoToAsync($"marcar-resolvido?ticketId={TicketId}");
+            // Após retornar do modal, recarregar para atualizar status
+            await CarregarAsync();
+        }
+        catch (Exception ex)
+        {
+            await AlertAsync("Erro", $"Falha ao abrir página: {ex.Message}");
+        }
+    }
+    
+    [RelayCommand]
+    public async Task ResolverPeloUsuarioAsync()
+    {
+        if (TicketId == Guid.Empty || !BotaoResolvidoHabilitado) return;
+        try
+        {
+            await Shell.Current.GoToAsync($"marcar-resolvido?ticketId={TicketId}");
+            // Após feedback, recarregar chamado
+            await Task.Delay(500);
+            await CarregarAsync();
+        }
+        catch (Exception ex)
+        {
+            await AlertAsync("Erro", $"Falha ao abrir feedback: {ex.Message}");
+        }
     }
 }

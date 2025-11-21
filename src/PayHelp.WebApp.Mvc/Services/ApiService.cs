@@ -20,7 +20,15 @@ public class ApiService
         _http = http;
         _httpContextAccessor = accessor;
         if (_http.BaseAddress == null)
-            _http.BaseAddress = new Uri("https://localhost:7236/api/");
+        {
+            // Allow per-session override set by Admin settings page
+            var overrideBase = accessor?.HttpContext?.Session?.GetString("ApiBaseOverride");
+            var baseUrl = overrideBase
+                ?? Environment.GetEnvironmentVariable("PAYHELP_API_BASE")
+                ?? "http://192.168.15.107:5236/api/"; // fallback LAN
+            if (!baseUrl.EndsWith("/")) baseUrl += "/";
+            _http.BaseAddress = new Uri(baseUrl);
+        }
     }
 
     public async Task<T?> GetAsync<T>(string endpoint)
@@ -64,6 +72,45 @@ public class ApiService
     {
         AttachBearerIfPresent();
         using var req = new HttpRequestMessage(HttpMethod.Delete, endpoint);
+        var resp = await SendWithRedirectAsync(req);
+        if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            throw new UnauthorizedAccessException("Sessão expirada");
+        if (resp.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            throw new UnauthorizedAccessException("Acesso negado");
+        if (!resp.IsSuccessStatusCode)
+        {
+            var err = await resp.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"API error {(int)resp.StatusCode} {resp.StatusCode}: {err}");
+        }
+    }
+
+    public async Task<TResponse?> PatchAsync<TResponse>(string endpoint, object body)
+    {
+        AttachBearerIfPresent();
+        var req = new HttpRequestMessage(HttpMethod.Patch, endpoint)
+        {
+            Content = JsonContent.Create(body)
+        };
+        var resp = await SendWithRedirectAsync(req);
+        if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            throw new UnauthorizedAccessException("Sessão expirada");
+        if (resp.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            throw new UnauthorizedAccessException("Acesso negado");
+        if (!resp.IsSuccessStatusCode)
+        {
+            var err = await resp.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"API error {(int)resp.StatusCode} {resp.StatusCode}: {err}");
+        }
+        return await resp.Content.ReadFromJsonAsync<TResponse>(_jsonOptions);
+    }
+
+    public async Task PutAsync<TRequest>(string endpoint, TRequest body)
+    {
+        AttachBearerIfPresent();
+        using var req = new HttpRequestMessage(HttpMethod.Put, endpoint)
+        {
+            Content = JsonContent.Create(body)
+        };
         var resp = await SendWithRedirectAsync(req);
         if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             throw new UnauthorizedAccessException("Sessão expirada");

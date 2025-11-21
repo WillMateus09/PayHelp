@@ -87,4 +87,56 @@ public partial class ChamadosViewModel : BaseViewModel
             await AlertAsync("Navegação", $"Falha ao abrir detalhes: {ex.Message}");
         }
     }
+    
+    [RelayCommand(IncludeCancelCommand = true)]
+    public async Task EncerrarChamadoAsync(TicketDto? ticket, CancellationToken ct)
+    {
+        if (ticket is null || !IsSuporte) return;
+        try
+        {
+            var confirmar = await Application.Current!.MainPage!.DisplayAlert(
+                "Encerrar Chamado",
+                $"Deseja realmente encerrar o chamado \"{ticket.Titulo}\" resolvido pelo usuário?",
+                "Sim",
+                "Não");
+                
+            if (!confirmar) return;
+            
+            var sucesso = await _chamados.CloseAsync(ticket.Id);
+            if (sucesso)
+            {
+                await AlertAsync("✅ Encerrado", "Chamado encerrado com sucesso.");
+                await CarregarAsync(); // Recarrega a lista inteira
+            }
+            else
+            {
+                await AlertAsync("Erro", "Falha ao encerrar o chamado.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await AlertAsync("Erro", $"Falha ao encerrar: {ex.Message}");
+        }
+    }
+    
+    [RelayCommand]
+    public async Task VerFeedbackAsync(TicketDto? ticket)
+    {
+        if (ticket is null) return;
+        try
+        {
+            var nota = ticket.NotaUsuario ?? 0;
+            var feedback = ticket.FeedbackUsuario ?? "(Sem comentário)";
+            var estrelas = new string('⭐', nota);
+            
+            await Application.Current!.MainPage!.DisplayAlert(
+                $"⭐ Feedback do Usuário",
+                $"Avaliação: {estrelas} ({nota}/5)\n\nComentário:\n{feedback}",
+                "Fechar");
+        }
+        catch (Exception ex)
+        {
+            await AlertAsync("Erro", $"Falha ao exibir feedback: {ex.Message}");
+        }
+    }
 }

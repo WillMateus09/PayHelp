@@ -50,10 +50,24 @@ public partial class LoginViewModel : BaseViewModel
 
             var role = (res.Role ?? string.Empty).ToLowerInvariant();
             var isSuporte = role.Contains("suporte") || role.Contains("support");
+            var isMaster = role.Contains("master");
 
-
-            Application.Current!.MainPage = isSuporte ? new AppShell() : new UserShell();
-            await Shell.Current.GoToAsync(isSuporte ? "
+            // Define o Shell baseado na role
+            if (isMaster)
+            {
+                Application.Current!.MainPage = new MasterShell();
+                await Shell.Current.GoToAsync("//home");
+            }
+            else if (isSuporte)
+            {
+                Application.Current!.MainPage = new AppShell();
+                await Shell.Current.GoToAsync("//home");
+            }
+            else
+            {
+                Application.Current!.MainPage = new UserShell();
+                await Shell.Current.GoToAsync("//home");
+            }
         }
         catch (Exception ex)
         {

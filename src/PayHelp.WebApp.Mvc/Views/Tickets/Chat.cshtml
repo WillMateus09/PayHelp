@@ -1,4 +1,5 @@
 @model PayHelp.WebApp.Mvc.ViewModels.ChatViewModel
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
 
@@ -9,6 +10,7 @@
     var isSimples = User?.IsInRole("Simples") == true;
     var isSuporte = User?.IsInRole("Suporte") == true;
     var isEncerrado = Model.Status == PayHelp.Domain.Enums.TicketStatus.Encerrado;
+    var isResolvidoUsuario = Model.Status == PayHelp.Domain.Enums.TicketStatus.ResolvidoPeloUsuario;
 }
 
 <!-- Header do Chat -->
@@ -25,7 +27,13 @@
                 </div>
             </div>
             <div class="chat-status-info">
-                @if (isEncerrado)
+                @if (Model.Status == PayHelp.Domain.Enums.TicketStatus.ResolvidoPeloUsuario)
+                {
+                    <span class="badge badge-chat-resolved" style="background-color: #17a2b8;">
+                        <i class="fas fa-user-check me-1"></i> Resolvido pelo Usuário
+                    </span>
+                }
+                else if (isEncerrado)
                 {
                     <span class="badge badge-chat-closed">
                         <i class="fas fa-check-circle me-1"></i> Chamado Encerrado
@@ -79,6 +87,13 @@
                             Não é possível chamar atendente quando o status é @Model.Status.
                         </span>
                     }
+                    
+                    <!-- Botão Resolvido -->
+                    <a href="@Url.Action("MarcarResolvido", "Tickets", new { id = Model.TicketId })" 
+                       class="btn btn-chat-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Resolvido
+                    </a>
                 }
                 @if (isSuporte)
                 {
@@ -95,6 +110,42 @@
         }
     </div>
 </div>
+
+<!-- Feedback do Usuário (quando status = ResolvidoPeloUsuario) -->
+@if (Model.Status == PayHelp.Domain.Enums.TicketStatus.ResolvidoPeloUsuario && !string.IsNullOrEmpty(Model.FeedbackUsuario))
+{
+    <div class="card card-modern mb-4" style="border-left: 4px solid #17a2b8;">
+        <div class="card-body">
+            <h5 class="card-title-modern mb-3">
+                <i class="fas fa-star text-warning me-2"></i>
+                Feedback do Usuário
+            </h5>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <strong>Avaliação:</strong>
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= (Model.NotaUsuario ?? 0))
+                            {
+                                <span style="color: gold; font-size: 1.5rem;">★</span>
+                            }
+                            else
+                            {
+                                <span style="color: lightgray; font-size: 1.5rem;">☆</span>
+                            }
+                        }
+                        <span class="badge bg-info ms-2">@(Model.NotaUsuario ?? 0)/5</span>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <strong class="d-block mb-2">Comentário:</strong>
+                    <div class="alert alert-light" style="white-space: pre-wrap;">@Model.FeedbackUsuario</div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 <!-- Área de Mensagens -->
 
@@ -144,12 +195,16 @@
     </div>
 
     <!-- Formulário de Envio -->
-    @if (isEncerrado)
+    @if (isEncerrado || (isResolvidoUsuario && isSimples))
     {
         <div class="chat-closed-notice">
             <i class="fas fa-lock me-2"></i>
-            <strong>Chamado Encerrado</strong>
-            <p class="mb-0">Este chamado foi encerrado e não é mais possível enviar mensagens.</p>
+            <strong>@(isEncerrado ? "Chamado Encerrado" : "Resolvido pelo Usuário")</strong>
+            <p class="mb-0">
+                @(isEncerrado 
+                    ? "Este chamado foi encerrado e não é mais possível enviar mensagens." 
+                    : "Este chamado foi marcado como resolvido via IA/autoatendimento. O envio de novas mensagens foi desabilitado para o usuário.")
+            </p>
         </div>
     }
     else
@@ -204,8 +259,12 @@
         }
         scrollToBottom();
 
+        // Build API hub URL from env or config (strip trailing /api)
+        const apiBase = '@((Environment.GetEnvironmentVariable("PAYHELP_API_BASE") ?? Configuration["Api:BaseUrl"])?.TrimEnd('/') ?? "")';
+        const hubUrl = apiBase && apiBase.toLowerCase().endsWith('/api') ? apiBase.slice(0, -4) + '/hubs/chat' : (apiBase ? apiBase + '/hubs/chat' : '/hubs/chat');
+
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/hubs/chat")
+            .withUrl(hubUrl)
             .withAutomaticReconnect()
             .build();
 

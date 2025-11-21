@@ -18,9 +18,15 @@ public static class Theme
     private static readonly Color PrimaryDark  = Color.FromArgb(10, 88, 202);
     private static readonly Color PrimaryLight = Color.FromArgb(231, 241, 255);
     private static readonly Color Danger       = Color.FromArgb(220, 53, 69);
+    private static readonly Color Success      = Color.FromArgb(33, 150, 83);
     private static readonly Color Text         = Color.FromArgb(33, 37, 41);
     private static readonly Color TextMuted    = Color.FromArgb(108, 117, 125);
     private static readonly Color Border       = Color.FromArgb(222, 226, 230);
+
+    public static Color BackgroundColor => Background;
+    public static Color PrimaryColor => Primary;
+    public static Color SuccessColor => Success;
+    public static Color TextColor => Text;
 
 
     private static readonly Font DefaultFont      = new Font("Segoe UI", 10f, FontStyle.Regular, GraphicsUnit.Point);
@@ -182,6 +188,17 @@ public static class Theme
             btn.MouseLeave += (_, __) => btn.BackColor = Danger;
             btn.MouseDown  += (_, __) => btn.BackColor = Color.FromArgb(173, 26, 43);
             btn.MouseUp    += (_, __) => btn.BackColor = Danger;
+        }
+        else if (role == "success")
+        {
+            btn.FlatAppearance.BorderSize = 0;
+            btn.BackColor = Success;
+            btn.ForeColor = Color.White;
+
+            btn.MouseEnter += (_, __) => btn.BackColor = Color.FromArgb(25, 135, 75);
+            btn.MouseLeave += (_, __) => btn.BackColor = Success;
+            btn.MouseDown  += (_, __) => btn.BackColor = Color.FromArgb(20, 120, 65);
+            btn.MouseUp    += (_, __) => btn.BackColor = Success;
         }
         else
         {

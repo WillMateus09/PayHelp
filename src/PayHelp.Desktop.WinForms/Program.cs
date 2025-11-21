@@ -41,7 +41,7 @@ public class ApiClient
     public record AuthResponse(Guid UserId, string Nome, string Email, string Role, string? Token);
     public record RegisterSimplesRequest(string NumeroInscricao, string Nome, string Email, string Senha);
     public record RegisterSuporteRequest(string NumeroInscricao, string Nome, string Email, string Senha, string PalavraVerificacao);
-    public record TicketDto(Guid Id, string Titulo, string Status, DateTime CriadoEmUtc, DateTime? EncerradoEmUtc, bool? Triaging = null);
+    public record TicketDto(Guid Id, string Titulo, string Status, DateTime CriadoEmUtc, DateTime? EncerradoEmUtc, bool ResolvidoPeloUsuario = false, bool? Triaging = null);
     public record AbrirChamadoRequest(Guid SolicitanteId, string Titulo, string Descricao);
     public record EnviarMensagemRequest(Guid RemetenteId, string Conteudo, bool Automatica);
     public record CannedMessageDto(Guid Id, string Titulo, string Conteudo, string? GatilhoPalavraChave);
@@ -53,8 +53,12 @@ public class ApiClient
     public record TriagemRequest(string Texto);
     public record TriagemApiResponse(string? sugestao, string? origem, string? faq);
     public record RelatorioFiltro(DateTime? DeUtc, DateTime? AteUtc, string? Status);
-    public record RelatorioDto(Guid TicketId, string Status, string SolicitanteEmail, string SolicitanteRole, TimeSpan? Duracao, DateTime CriadoEmUtc, DateTime? EncerradoEmUtc);
+    public record RelatorioDto(Guid TicketId, string Status, string SolicitanteEmail, string SolicitanteRole, TimeSpan? Duracao, DateTime CriadoEmUtc, DateTime? EncerradoEmUtc, bool ResolvidoPeloUsuario = false);
     public record FaqItemDto(int Id, string TituloProblema, string Solucao, DateTime DataCriacao, Guid? TicketId);
+    public record FeedbackRequest(Guid TicketId, Guid UserId, int Nota, string? Comentario);
+    public record FeedbackDto(Guid Id, Guid TicketId, Guid UserId, int Nota, string? Comentario, DateTime CriadoEmUtc);
+    public record FeedbackListItemDto(Guid TicketId, string TicketTitulo, string UsuarioNome, string UsuarioEmail, int Nota, string Comentario, DateTime DataCriacao);
+    public record TicketComFeedbackDto(Guid Id, string Titulo, string Status, DateTime CriadoEmUtc, DateTime? EncerradoEmUtc, bool? Triaging, bool ResolvidoPeloUsuario, bool ResolvidoViaIA, FeedbackDto? Feedback);
 
     public Uri? BaseAddress => _http.BaseAddress;
     public void UseBaseUrl(string url)
@@ -228,6 +232,63 @@ public class ApiClient
         return r ?? new List<FaqItemDto>();
     }
 
+    public Task<FeedbackDto?> SalvarFeedbackAsync(Guid ticketId, Guid userId, int nota, string? comentario)
+        => Send<FeedbackDto>(HttpMethod.Post, $"api/chamados/{ticketId}/feedback", new FeedbackRequest(ticketId, userId, nota, comentario));
+
+    public Task<FeedbackDto?> ObterFeedbackAsync(Guid ticketId)
+        => Send<FeedbackDto>(HttpMethod.Get, $"api/chamados/{ticketId}/feedback");
+
+    public Task<TicketDto?> MarcarComoResolvidoPeloUsuarioAsync(Guid ticketId)
+        => Send<TicketDto>(HttpMethod.Post, $"api/chamados/{ticketId}/marcar-resolvido-usuario");
+
+    public Task<TicketComFeedbackDto?> ObterChamadoComFeedbackAsync(Guid ticketId)
+        => Send<TicketComFeedbackDto>(HttpMethod.Get, $"api/chamados/{ticketId}/completo");
+
+    public Task<List<FeedbackListItemDto>?> ListarTodosFeedbacksAsync()
+        => Send<List<FeedbackListItemDto>>(HttpMethod.Get, "api/chamados/feedbacks");
+
+    // Admin endpoints
+    public record AdminSettingsDto(string? SupportVerificationWord, string? PublicBaseUrl);
+    public record AdminUserDto(Guid Id, string Nome, string Email, string Role, bool IsBlocked);
+    public record BlockUserDto(bool Blocked);
+    public record SetPasswordDto(string NewPassword);
+
+    public Task<AdminSettingsDto?> GetAdminSettingsAsync()
+        => Send<AdminSettingsDto>(HttpMethod.Get, "api/admin/settings");
+
+    public async Task UpdateAdminSettingsAsync(string? supportWord, string? publicUrl)
+    {
+        var resp = await SendInternalAsync(HttpMethod.Put, "api/admin/settings", new AdminSettingsDto(supportWord, publicUrl));
+        if (!resp.IsSuccessStatusCode)
+        {
+            var error = await resp.Content.ReadAsStringAsync();
+            throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? $"Falha HTTP {(int)resp.StatusCode}" : error);
+        }
+    }
+
+    public Task<List<AdminUserDto>?> ListUsersAsync()
+        => Send<List<AdminUserDto>>(HttpMethod.Get, "api/admin/users");
+
+    public async Task BlockUserAsync(Guid userId, bool blocked)
+    {
+        var resp = await SendInternalAsync(HttpMethod.Post, $"api/admin/users/{userId}/block", new BlockUserDto(blocked));
+        if (!resp.IsSuccessStatusCode)
+        {
+            var error = await resp.Content.ReadAsStringAsync();
+            throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? $"Falha HTTP {(int)resp.StatusCode}" : error);
+        }
+    }
+
+    public async Task SetUserPasswordAsync(Guid userId, string newPassword)
+    {
+        var resp = await SendInternalAsync(HttpMethod.Post, $"api/admin/users/{userId}/password", new SetPasswordDto(newPassword));
+        if (!resp.IsSuccessStatusCode)
+        {
+            var error = await resp.Content.ReadAsStringAsync();
+            throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? $"Falha HTTP {(int)resp.StatusCode}" : error);
+        }
+    }
+
     private async Task<T?> Send<T>(HttpMethod method, string url, object? body = null)
     {
         var resp = await SendInternalAsync(method, url, body);
@@ -346,7 +407,7 @@ static class Program
         {
             var baseUrl = apiBaseFromEnv
                 ?? config["Api:BaseUrl"]
-                ?? "http://192.168.15.105:5236/";
+                ?? "http://192.168.15.107:5236/";
             if (!baseUrl.EndsWith("/")) baseUrl += "/";
             c.BaseAddress = new Uri(baseUrl);
             c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -357,8 +418,10 @@ static class Program
         .AddHttpMessageHandler<AuthHeaderHandler>();
 
         services.AddSingleton<SessionContext>();
+        services.AddTransient<IAFeedbackService>();
         services.AddTransient<FrmLogin>();
         services.AddTransient<FrmHome>();
+        services.AddTransient<FrmMasterHome>();
         services.AddTransient<FrmCadastro>();
         services.AddTransient<FrmPainelUsuario>();
         services.AddTransient<FrmPainelSuporte>();
@@ -366,6 +429,9 @@ static class Program
         services.AddTransient<FrmMensagensAutomaticas>();
         services.AddTransient<FrmRelatorios>();
     services.AddTransient<FrmAbrirChamadoWizard>();
+    services.AddTransient<FrmListaFeedbacks>();
+        services.AddTransient<FrmAdminUsuarios>();
+        services.AddTransient<FrmAdminConfiguracoes>();
 
     using var provider = services.BuildServiceProvider();
 
@@ -376,7 +442,7 @@ static class Program
         var baseUrl = apiBaseFromEnv
             ?? cfg["Api:BaseUrl"]
             ?? api.BaseAddress?.ToString()
-            ?? "http://192.168.15.105:5236/";
+            ?? "http://192.168.15.107:5236/";
         var ping = api.PingVersionAsync().GetAwaiter().GetResult();
         if (!ping.ok)
         {
@@ -460,21 +526,45 @@ static class Program
 
         try
         {
-            AppLog.Write("[APP] Iniciando FrmHome");
-            var home = provider.GetRequiredService<FrmHome>();
-            home.Shown += (_, __) => { try { home.Activate(); home.BringToFront(); } catch { } };
+            // Detectar se é Master
+            var isMaster = sessionCtx.CurrentUser?.Role?.Contains("Master", StringComparison.OrdinalIgnoreCase) ?? false;
+            
+            if (isMaster)
+            {
+                AppLog.Write("[APP] Iniciando FrmMasterHome (usuário Master detectado)");
+                var masterHome = provider.GetRequiredService<FrmMasterHome>();
+                masterHome.Shown += (_, __) => { try { masterHome.Activate(); masterHome.BringToFront(); } catch { } };
 
-            System.Windows.Forms.MessageBox.Show(
-                $"Login OK. Usuário: {sessionCtx.CurrentUser?.Email} (Role: {sessionCtx.CurrentUser?.Role}). Abrindo Home...",
-                "Sessão",
-                System.Windows.Forms.MessageBoxButtons.OK,
-                System.Windows.Forms.MessageBoxIcon.Information
-            );
-            home.FormClosed += (_, __) => {
-                try { System.Diagnostics.Debug.WriteLine("[HOME] FormClosed - encerrando aplicação"); } catch { }
-                AppLog.Write("[APP] FrmHome fechado. Encerrando aplicação.");
-            };
-            System.Windows.Forms.Application.Run(home);
+                System.Windows.Forms.MessageBox.Show(
+                    $"Login OK. Admin Master: {sessionCtx.CurrentUser?.Email}. Abrindo painel administrativo...",
+                    "Sessão Admin",
+                    System.Windows.Forms.MessageBoxButtons.OK,
+                    System.Windows.Forms.MessageBoxIcon.Information
+                );
+                masterHome.FormClosed += (_, __) => {
+                    try { System.Diagnostics.Debug.WriteLine("[MASTER_HOME] FormClosed - encerrando aplicação"); } catch { }
+                    AppLog.Write("[APP] FrmMasterHome fechado. Encerrando aplicação.");
+                };
+                System.Windows.Forms.Application.Run(masterHome);
+            }
+            else
+            {
+                AppLog.Write("[APP] Iniciando FrmHome");
+                var home = provider.GetRequiredService<FrmHome>();
+                home.Shown += (_, __) => { try { home.Activate(); home.BringToFront(); } catch { } };
+
+                System.Windows.Forms.MessageBox.Show(
+                    $"Login OK. Usuário: {sessionCtx.CurrentUser?.Email} (Role: {sessionCtx.CurrentUser?.Role}). Abrindo Home...",
+                    "Sessão",
+                    System.Windows.Forms.MessageBoxButtons.OK,
+                    System.Windows.Forms.MessageBoxIcon.Information
+                );
+                home.FormClosed += (_, __) => {
+                    try { System.Diagnostics.Debug.WriteLine("[HOME] FormClosed - encerrando aplicação"); } catch { }
+                    AppLog.Write("[APP] FrmHome fechado. Encerrando aplicação.");
+                };
+                System.Windows.Forms.Application.Run(home);
+            }
         }
         catch (Exception ex)
         {

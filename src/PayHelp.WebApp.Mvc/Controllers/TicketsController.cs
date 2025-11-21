@@ -6,6 +6,7 @@ using PayHelp.Domain.Enums;
 using PayHelp.WebApp.Mvc.Hubs;
 using PayHelp.WebApp.Mvc.Services;
 using PayHelp.WebApp.Mvc.ViewModels;
+using PayHelp.WebApp.Mvc.Models;
 
 namespace PayHelp.WebApp.Mvc.Controllers;
 
@@ -31,7 +32,7 @@ public class TicketsController : Controller
 
     private record TicketListDto(Guid Id, string Titulo, string Status, DateTime CriadoEmUtc, DateTime? EncerradoEmUtc);
     private record MessageDto(Guid Id, Guid RemetenteUserId, string Conteudo, DateTime EnviadoEmUtc, bool Automatica);
-    private record TicketDetailsDto(Guid Id, string Titulo, string Descricao, string Status, DateTime CriadoEmUtc, DateTime? EncerradoEmUtc, IEnumerable<MessageDto> Mensagens);
+    private record TicketDetailsDto(Guid Id, string Titulo, string Descricao, string Status, DateTime CriadoEmUtc, DateTime? EncerradoEmUtc, IEnumerable<MessageDto> Mensagens, string? FeedbackUsuario, int? NotaUsuario);
 
     [HttpGet]
     public async Task<IActionResult> Minhas()
@@ -112,7 +113,7 @@ public class TicketsController : Controller
         var dto = await _api.GetAsync<TicketDetailsDto>($"chamados/{id}");
         if (dto == null) return NotFound();
         var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-        var currentUserName = User.FindFirst(ClaimTypes.Name)?.Value ?? "Voc�";
+        var currentUserName = User.FindFirst(ClaimTypes.Name)?.Value ?? "Você";
         var isSupport = User.IsInRole("Suporte");
         var statusEnum = Enum.TryParse<TicketStatus>(dto.Status, true, out var st) ? st : TicketStatus.Aberto;
         var vm = new ChatViewModel
@@ -120,6 +121,8 @@ public class TicketsController : Controller
             TicketId = dto.Id,
             Titulo = dto.Titulo,
             Status = statusEnum,
+            FeedbackUsuario = dto.FeedbackUsuario,
+            NotaUsuario = dto.NotaUsuario,
             Mensagens = (dto.Mensagens ?? Array.Empty<MessageDto>())
                 .OrderBy(m => m.EnviadoEmUtc)
                 .Select(m => new ChatMessageVM
@@ -277,5 +280,88 @@ public class TicketsController : Controller
             TempData["Erro"] = ex.Message;
         }
         return RedirectToAction("Chat", new { id = ticketId });
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Simples")]
+    public async Task<IActionResult> MarcarResolvido(Guid id)
+    {
+        var dto = await _api.GetAsync<TicketDetailsDto>($"chamados/{id}");
+        if (dto == null) return NotFound();
+
+        if (string.Equals(dto.Status, TicketStatus.Encerrado.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["Erro"] = "Este chamado já está encerrado.";
+            return RedirectToAction("Chat", new { id });
+        }
+
+        var vm = new MarcarResolvidoViewModel
+        {
+            TicketId = id,
+            TituloTicket = dto.Titulo
+        };
+
+        return View(vm);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Simples")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarcarResolvido(MarcarResolvidoViewModel vm)
+    {
+        Console.WriteLine("=== POST MarcarResolvido RECEBIDO ===");
+        Console.WriteLine($"TicketId: {vm.TicketId}");
+        Console.WriteLine($"NotaUsuario: {vm.NotaUsuario}");
+        Console.WriteLine($"FeedbackUsuario: {(vm.FeedbackUsuario != null ? vm.FeedbackUsuario.Substring(0, Math.Min(50, vm.FeedbackUsuario.Length)) : "null")}");
+        Console.WriteLine($"ModelState.IsValid: {ModelState.IsValid}");
+        
+        if (!ModelState.IsValid)
+        {
+            Console.WriteLine("❌ ModelState INVÁLIDO:");
+            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                Console.WriteLine($"  - {error.ErrorMessage}");
+            }
+            return View(vm);
+        }
+
+        try
+        {
+            Console.WriteLine("✓ Chamando API...");
+            Console.WriteLine($"Endpoint completo: chamados/{vm.TicketId}/marcar-resolvido-usuario");
+            
+            var resultado = await _api.PatchAsync<object>($"chamados/{vm.TicketId}/marcar-resolvido-usuario", new
+            {
+                FeedbackUsuario = vm.FeedbackUsuario,
+                NotaUsuario = vm.NotaUsuario
+            });
+
+            Console.WriteLine("✓ API respondeu com sucesso!");
+            Console.WriteLine($"Resultado: {System.Text.Json.JsonSerializer.Serialize(resultado)}");
+            
+            TempData["Sucesso"] = "✓ Chamado marcado como resolvido! Obrigado pelo seu feedback.";
+            Console.WriteLine("✓ Redirecionando para Minhas...");
+            return RedirectToAction("Minhas");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"❌ ERRO HTTP na API: {ex.Message}");
+            Console.WriteLine($"StatusCode: {ex.StatusCode}");
+            Console.WriteLine($"InnerException: {ex.InnerException?.Message}");
+            
+            var mensagemErro = ex.Message.Contains("404") 
+                ? "Erro ao marcar como resolvido: Endpoint não encontrado. A API está rodando?" 
+                : $"Erro ao marcar como resolvido: {ex.Message}";
+                
+            ModelState.AddModelError("", mensagemErro);
+            return View(vm);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ ERRO GERAL: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+            ModelState.AddModelError("", $"Erro inesperado: {ex.Message}");
+            return View(vm);
+        }
     }
 }

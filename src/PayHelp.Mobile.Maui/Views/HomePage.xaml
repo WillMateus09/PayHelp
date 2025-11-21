@@ -36,7 +36,7 @@
                 <Label Text="Acesso Rápido" Style="{StaticResource H4}" />
                 
                 <!-- Action Cards Grid (3 colunas lado a lado) -->
-                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto" ColumnSpacing="12" RowSpacing="12">
+                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
                     
                     <!-- Dashboard Card -->
                     <Frame Style="{StaticResource Card}" Grid.Row="0" Grid.Column="0">
@@ -110,6 +110,32 @@
                                        VerticalOptions="Center"/>
                             </Border>
                             <Label Text="Relatórios" 
+                                   Style="{StaticResource Body}"
+                                   FontAttributes="Bold"
+                                   HorizontalTextAlignment="Center"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                    
+                    <!-- Feedbacks Card (apenas para suporte) -->
+                    <Frame Style="{StaticResource Card}" Grid.Row="1" Grid.Column="0" IsVisible="{Binding IsSuporte}">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnNavigateClicked" CommandParameter="feedback-lista" />
+                        </Frame.GestureRecognizers>
+                        <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                            <Border BackgroundColor="{StaticResource Success}"
+                                    StrokeThickness="0"
+                                    WidthRequest="56"
+                                    HeightRequest="56"
+                                    HorizontalOptions="Center">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Label Text="⭐" 
+                                       FontSize="28"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"/>
+                            </Border>
+                            <Label Text="Feedbacks" 
                                    Style="{StaticResource Body}"
                                    FontAttributes="Bold"
                                    HorizontalTextAlignment="Center"/>

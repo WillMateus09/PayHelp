@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PayHelp.Mobile.Maui.Views.AdminPage"
+             Title="Painel Admin">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="20">
+            
+            <!-- Header -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="👑 Painel Administrativo"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource Primary}" />
+                <Label Text="Gerencie usuários e configurações do sistema"
+                       FontSize="14"
+                       TextColor="{StaticResource Gray600}" />
+            </VerticalStackLayout>
+
+            <!-- Card Gerenciar Usuários -->
+            <Frame CornerRadius="16"
+                   BorderColor="{StaticResource Gray200}"
+                   HasShadow="True"
+                   Padding="0">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnUsuariosClicked" />
+                </Frame.GestureRecognizers>
+                
+                <Grid Padding="20" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                    <!-- Ícone -->
+                    <Frame Grid.Column="0"
+                           WidthRequest="56"
+                           HeightRequest="56"
+                           CornerRadius="28"
+                           Padding="0"
+                           HasShadow="False"
+                           BackgroundColor="{StaticResource Primary}">
+                        <Label Text="👥"
+                               FontSize="28"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Frame>
+
+                    <!-- Texto -->
+                    <VerticalStackLayout Grid.Column="1" 
+                                         VerticalOptions="Center"
+                                         Spacing="4">
+                        <Label Text="Gerenciar Usuários"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Gray900}" />
+                        <Label Text="Bloqueie usuários ou redefina senhas"
+                               FontSize="13"
+                               TextColor="{StaticResource Gray600}" />
+                    </VerticalStackLayout>
+
+                    <!-- Seta -->
+                    <Label Grid.Column="2"
+                           Text="›"
+                           FontSize="32"
+                           TextColor="{StaticResource Gray400}"
+                           VerticalOptions="Center" />
+                </Grid>
+            </Frame>
+
+            <!-- Card Configurações -->
+            <Frame CornerRadius="16"
+                   BorderColor="{StaticResource Gray200}"
+                   HasShadow="True"
+                   Padding="0">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnConfiguracoesClicked" />
+                </Frame.GestureRecognizers>
+                
+                <Grid Padding="20" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                    <!-- Ícone -->
+                    <Frame Grid.Column="0"
+                           WidthRequest="56"
+                           HeightRequest="56"
+                           CornerRadius="28"
+                           Padding="0"
+                           HasShadow="False"
+                           BackgroundColor="#6c757d">
+                        <Label Text="⚙️"
+                               FontSize="28"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Frame>
+
+                    <!-- Texto -->
+                    <VerticalStackLayout Grid.Column="1" 
+                                         VerticalOptions="Center"
+                                         Spacing="4">
+                        <Label Text="Configurações"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Gray900}" />
+                        <Label Text="Configure parâmetros do sistema"
+                               FontSize="13"
+                               TextColor="{StaticResource Gray600}" />
+                    </VerticalStackLayout>
+
+                    <!-- Seta -->
+                    <Label Grid.Column="2"
+                           Text="›"
+                           FontSize="32"
+                           TextColor="{StaticResource Gray400}"
+                           VerticalOptions="Center" />
+                </Grid>
+            </Frame>
+
+            <!-- Info Card -->
+            <Frame CornerRadius="12"
+                   BorderColor="{StaticResource Primary}"
+                   HasShadow="False"
+                   Padding="16"
+                   BackgroundColor="#E3F2FD">
+                <HorizontalStackLayout Spacing="12">
+                    <Label Text="ℹ️"
+                           FontSize="24"
+                           VerticalOptions="Start" />
+                    <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                        <Label Text="Área restrita"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}" />
+                        <Label Text="Apenas usuários com perfil Master têm acesso a estas funcionalidades."
+                               FontSize="12"
+                               TextColor="{StaticResource Gray700}" />
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

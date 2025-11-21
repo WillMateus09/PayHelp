@@ -30,7 +30,11 @@ public class SupportController : Controller
         DateTime CriadoEmUtc,
         DateTime? EncerradoEmUtc,
         string? ResolucaoFinal,
-        bool? Triaging
+        bool? Triaging,
+        bool ResolvidoPeloUsuario,
+        string? FeedbackUsuario,
+        int? NotaUsuario,
+        DateTime? DataResolvidoUsuario
     );
 
     private record TicketDetailsDto(
@@ -63,7 +67,7 @@ public class SupportController : Controller
     var vm = new SupportDashboardViewModel
         {
             Abertos = tickets
-                .Where(t => t.Status == TicketStatus.Aberto.ToString())
+                .Where(t => t.Status == TicketStatus.Aberto.ToString() && !t.ResolvidoPeloUsuario)
                 .Select(t => new TicketListItemViewModel
                 {
                     Id = t.Id,
@@ -72,11 +76,15 @@ public class SupportController : Controller
                     CriadoEmUtc = t.CriadoEmUtc,
                     EncerradoEmUtc = t.EncerradoEmUtc,
                     PossuiResolucao = !string.IsNullOrWhiteSpace(t.ResolucaoFinal),
-                    ResumoResolucao = Trunc(t.ResolucaoFinal)
+                    ResumoResolucao = Trunc(t.ResolucaoFinal),
+                    ResolvidoPeloUsuario = t.ResolvidoPeloUsuario,
+                    FeedbackUsuario = t.FeedbackUsuario,
+                    NotaUsuario = t.NotaUsuario,
+                    DataResolvidoUsuario = t.DataResolvidoUsuario
                 }).ToList(),
 
             EmAtendimento = tickets
-                .Where(t => t.Status == TicketStatus.EmAtendimento.ToString())
+                .Where(t => t.Status == TicketStatus.EmAtendimento.ToString() && !t.ResolvidoPeloUsuario)
                 .Select(t => new TicketListItemViewModel
                 {
                     Id = t.Id,
@@ -85,7 +93,11 @@ public class SupportController : Controller
                     CriadoEmUtc = t.CriadoEmUtc,
                     EncerradoEmUtc = t.EncerradoEmUtc,
                     PossuiResolucao = !string.IsNullOrWhiteSpace(t.ResolucaoFinal),
-                    ResumoResolucao = Trunc(t.ResolucaoFinal)
+                    ResumoResolucao = Trunc(t.ResolucaoFinal),
+                    ResolvidoPeloUsuario = t.ResolvidoPeloUsuario,
+                    FeedbackUsuario = t.FeedbackUsuario,
+                    NotaUsuario = t.NotaUsuario,
+                    DataResolvidoUsuario = t.DataResolvidoUsuario
                 }).ToList(),
 
             Encerrados = tickets
@@ -98,7 +110,26 @@ public class SupportController : Controller
                     CriadoEmUtc = t.CriadoEmUtc,
                     EncerradoEmUtc = t.EncerradoEmUtc,
                     PossuiResolucao = !string.IsNullOrWhiteSpace(t.ResolucaoFinal),
-                    ResumoResolucao = Trunc(t.ResolucaoFinal)
+                    ResumoResolucao = Trunc(t.ResolucaoFinal),
+                    ResolvidoPeloUsuario = t.ResolvidoPeloUsuario,
+                    FeedbackUsuario = t.FeedbackUsuario,
+                    NotaUsuario = t.NotaUsuario,
+                    DataResolvidoUsuario = t.DataResolvidoUsuario
+                }).ToList(),
+
+            Tickets = tickets.Select(t => new TicketListItemViewModel
+                {
+                    Id = t.Id,
+                    Titulo = t.Titulo,
+                    Status = Enum.TryParse<TicketStatus>(t.Status, out var s) ? s : TicketStatus.Aberto,
+                    CriadoEmUtc = t.CriadoEmUtc,
+                    EncerradoEmUtc = t.EncerradoEmUtc,
+                    PossuiResolucao = !string.IsNullOrWhiteSpace(t.ResolucaoFinal),
+                    ResumoResolucao = Trunc(t.ResolucaoFinal),
+                    ResolvidoPeloUsuario = t.ResolvidoPeloUsuario,
+                    FeedbackUsuario = t.FeedbackUsuario,
+                    NotaUsuario = t.NotaUsuario,
+                    DataResolvidoUsuario = t.DataResolvidoUsuario
                 }).ToList(),
 
             FiltroSelecionado = string.IsNullOrWhiteSpace(status)
@@ -286,5 +317,67 @@ public class SupportController : Controller
             try { await _api.PostAsync<object, object>($"chamados/{id}/status", new { Status = "EmAtendimento" }); } catch { }
         }
         return RedirectToAction("Chat", new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EncerrarComFeedback(Guid id)
+    {
+        try
+        {
+            // 1) Tenta o endpoint dedicado de encerramento (grava data/hora)
+            await _api.PostAsync<object, object>($"chamados/{id}/encerrar", new { });
+            TempData["Sucesso"] = "Chamado encerrado com sucesso!";
+
+            try { await _hub.Clients.Group("support").SendAsync("StatusChanged", new { ticketId = id.ToString(), status = "Encerrado", viaApi = true }); } catch { }
+        }
+        catch (HttpRequestException ex)
+        {
+            // 2) Fallback: se o endpoint dedicado não existir (ex. 404), força status Encerrado
+            if (ex.Message.Contains("404"))
+            {
+                try
+                {
+                    var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    Guid? supportUserId = userIdClaim != null ? Guid.Parse(userIdClaim) : null;
+                    await _api.PostAsync<object, object>($"chamados/{id}/status", new { NovoStatus = "Encerrado", SupportUserId = supportUserId });
+                    TempData["Sucesso"] = "Chamado encerrado com sucesso (modo compatibilidade).";
+                    try { await _hub.Clients.Group("support").SendAsync("StatusChanged", new { ticketId = id.ToString(), status = "Encerrado", viaApi = true }); } catch { }
+                }
+                catch (Exception ex2)
+                {
+                    TempData["Erro"] = $"Erro ao encerrar chamado (fallback): {ex2.Message}";
+                }
+            }
+            else
+            {
+                TempData["Erro"] = $"Erro ao encerrar chamado: {ex.Message}";
+            }
+        }
+        catch (UnauthorizedAccessException)
+        {
+            TempData["Erro"] = "Sessão expirada ou sem permissão. Entre como Suporte para encerrar.";
+        }
+
+        return RedirectToAction("Dashboard");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetTicketFeedback(Guid id)
+    {
+        try
+        {
+            var ticket = await _api.GetAsync<dynamic>($"chamados/{id}/feedback");
+            return Json(new
+            {
+                feedback = ticket?.Comentario?.ToString() ?? "",
+                nota = ticket?.Nota ?? 0,
+                dataResolvido = ticket?.CriadoEmUtc?.ToString() ?? ""
+            });
+        }
+        catch
+        {
+            return Json(new { feedback = "Erro ao carregar feedback", nota = 0, dataResolvido = "" });
+        }
     }
 }

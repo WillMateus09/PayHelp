@@ -186,11 +186,14 @@ public partial class FrmPainelUsuario : Form
         }
     }
 
-    private void AbrirChat(ApiClient.TicketDto ticket)
+    private async void AbrirChat(ApiClient.TicketDto ticket)
     {
         var chat = (FrmChatChamado)_provider.GetService(typeof(FrmChatChamado))!;
         chat.SetTicket(ticket.Id);
         chat.ShowDialog();
+        
+        // Recarrega os tickets após fechar o chat para atualizar o status
+        await CarregarTicketsAsync();
     }
 
 
@@ -336,9 +339,14 @@ public partial class FrmPainelUsuario : Form
                 return (Color.FromArgb(255, 249, 230), Color.FromArgb(255, 224, 102), Color.FromArgb(138, 106, 0));
             case "em andamento":
             case "andamento":
+            case "ematendimento":
                 return (Color.FromArgb(232, 244, 253), Color.FromArgb(177, 212, 243), Color.FromArgb(26, 95, 180));
-            case "fechado":
+            case "resolvido pelo usuário (ia)":
             case "resolvido":
+            case "resolvidopelousuario":
+                return (Color.FromArgb(220, 237, 200), Color.FromArgb(139, 195, 74), Color.FromArgb(51, 105, 30));
+            case "fechado":
+            case "encerrado":
                 return (Color.FromArgb(238, 238, 238), Color.FromArgb(210, 210, 210), Color.FromArgb(90, 90, 90));
             default:
                 return (Color.FromArgb(234, 234, 234), Color.FromArgb(210, 210, 210), Color.FromArgb(60, 60, 60));
